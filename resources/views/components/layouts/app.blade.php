@@ -47,7 +47,10 @@
 						<a href="#kontak" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Kontak</a>
 					</nav>
 					<div class="flex items-center gap-3">
-						<a href="#mulai" class="inline-flex rounded-md bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition">Mulai Sekarang</a>
+						<a href="/login" class="inline-flex items-center gap-2 rounded-md bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition">
+							<span>🔐</span>
+							Login
+						</a>
 					</div>
 				</div>
 			</div>
@@ -90,7 +93,7 @@
 							<li><a href="#tentang" class="hover:text-neutral-900 transition">Tentang Kami</a></li>
 							<li><a href="#fitur" class="hover:text-neutral-900 transition">Fitur</a></li>
 							<li><a href="#" class="hover:text-neutral-900 transition">Design System</a></li>
-							<li><a href="#" class="hover:text-neutral-900 transition">Login</a></li>
+							<li><a href="/login" class="hover:text-neutral-900 transition">Login</a></li>
 						</ul>
 					</div>
 					<div class="text-sm">

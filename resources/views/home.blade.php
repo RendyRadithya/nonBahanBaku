@@ -18,9 +18,9 @@
                         Efisiensi pemesanan Gas, CO₂, Translite, dan Akrilik dalam satu platform terintegrasi.
                     </p>
                     <div class="flex flex-wrap gap-4">
-                        <a href="#mulai" class="inline-flex items-center gap-2 rounded-lg bg-yellow-400 px-7 py-3.5 text-base font-bold text-neutral-900 hover:bg-yellow-500 transition shadow-lg">
-                            <span>🚀</span>
-                            Mulai Sekarang
+                        <a href="/login" class="inline-flex items-center gap-2 rounded-lg bg-yellow-400 px-7 py-3.5 text-base font-bold text-neutral-900 hover:bg-yellow-500 transition shadow-lg">
+                            <span>�</span>
+                            Login Sekarang
                         </a>
                         <a href="#tentang" class="inline-flex items-center gap-2 rounded-lg bg-transparent border-2 border-white px-7 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition">
                             Pelajari Lebih Lanjut
