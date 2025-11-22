@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Dashboard Vendor - McOrder</title>
     @vite(['resources/css/app.css','resources/js/app.js'])
@@ -222,7 +223,7 @@
                                     <span class="inline-block px-3 py-1 rounded-full text-xs {{ $badge }}">{{ $o->status ?? '-' }}</span>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <a href="#" class="inline-flex items-center justify-center w-9 h-9 border rounded-md text-neutral-600">👁</a>
+                                    <button class="inline-flex items-center justify-center w-9 h-9 border rounded-md text-neutral-600 btn-order-detail" data-id="{{ $o->id }}" title="Lihat Detail">👁</button>
                                 </td>
                             </tr>
                         @empty
@@ -233,8 +234,140 @@
             </div>
         </div>
     </main>
+    <!-- Order Detail Modal for Vendor -->
+    <div id="vendor-order-modal" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0,0,0,0.08);">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+            <div class="flex items-center justify-between px-5 py-4 border-b">
+                <div>
+                    <h3 id="vo-title" class="text-lg font-semibold">Detail Pesanan</h3>
+                    <div id="vo-sub" class="text-sm text-neutral-500">ORD-xxxx - Informasi Lengkap Pesanan</div>
+                </div>
+                <button id="vo-close-top" class="text-neutral-500 hover:text-neutral-800">✕</button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="text-xs text-neutral-500">Status Saat Ini:</div>
+                        <div id="vo-status-badge" class="inline-block px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-700 mt-1">-</div>
+                    </div>
+                    <div>
+                        <button id="vo-reject" class="px-4 py-2 rounded-lg border text-red-600">Tolak Pesanan</button>
+                        <button id="vo-accept" class="px-4 py-2 rounded-lg bg-green-600 text-white ml-3">Terima Pesanan</button>
+                    </div>
+                </div>
+
+                <div class="border rounded-lg p-4 bg-neutral-50">
+                    <h4 class="font-semibold mb-2">Informasi Pesanan</h4>
+                    <div class="grid grid-cols-2 gap-2 text-sm text-neutral-700">
+                        <div>No. Pesanan</div><div class="text-right font-medium" id="vo-order-number">-</div>
+                        <div>Tanggal Pesan</div><div class="text-right" id="vo-order-date">-</div>
+                        <div>Produk</div><div class="text-right" id="vo-product">-</div>
+                        <div>Jumlah</div><div class="text-right" id="vo-qty">-</div>
+                        <div>Tanggal Pengiriman</div><div class="text-right" id="vo-estimated">-</div>
+                        <div>Total Harga</div><div class="text-right font-medium text-red-600" id="vo-total">-</div>
+                        <div>Catatan dari Store</div><div class="text-right text-neutral-600" id="vo-notes">-</div>
+                    </div>
+                </div>
+
+                <div class="border rounded-lg p-4 bg-white">
+                    <h4 class="font-semibold mb-2">Informasi Pengiriman</h4>
+                    <div id="vo-store-info" class="text-sm text-neutral-700">
+                        <!-- store/vendor info inserted here -->
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3">
+                    <button id="vo-close" class="px-4 py-2 rounded-lg border">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- footer removed per request (logo kept in header only) -->
     <script>
+        // Vendor order modal logic
+        (function(){
+            const table = document.querySelector('table');
+            const modal = document.getElementById('vendor-order-modal');
+            const closeTop = document.getElementById('vo-close-top');
+            const closeBtn = document.getElementById('vo-close');
+            const acceptBtn = document.getElementById('vo-accept');
+            const rejectBtn = document.getElementById('vo-reject');
+            let currentOrderId = null;
+
+            function openModal(){ modal.classList.remove('hidden'); modal.classList.add('flex'); }
+            function closeModal(){ modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+            async function loadOrder(id){
+                try{
+                    const res = await fetch('/orders/' + id + '/tracking');
+                    if(!res.ok) throw new Error('Gagal memuat pesanan');
+                    const body = await res.json();
+                    const o = body.order;
+                    currentOrderId = o.id;
+                    document.getElementById('vo-order-number').textContent = o.order_number || '-';
+                    document.getElementById('vo-order-date').textContent = new Date(o.created_at).toLocaleDateString('id-ID');
+                    document.getElementById('vo-product').textContent = o.product_name || '-';
+                    document.getElementById('vo-qty').textContent = (o.quantity || '-') + ' unit';
+                    document.getElementById('vo-estimated').textContent = o.estimated_delivery ? new Date(o.estimated_delivery).toLocaleDateString('id-ID') : '-';
+                    document.getElementById('vo-total').textContent = (function(v){ return 'Rp ' + Number(v||0).toLocaleString('id-ID'); })(o.total_price);
+                    document.getElementById('vo-notes').textContent = o.notes || '-';
+                    // status badge
+                    document.getElementById('vo-status-badge').textContent = body.status_label || (o.status||'-');
+                    // vendor/store info (buyer)
+                    const storeEl = document.getElementById('vo-store-info');
+                    storeEl.innerHTML = '';
+                    if(body.vendor){
+                        storeEl.innerHTML = `<div class="font-medium">${body.vendor.store_name || body.vendor.name}</div><div class="text-xs text-neutral-500 mt-1">${body.vendor.email || ''}</div><div class="text-xs mt-1">${body.vendor.phone || ''}</div>`;
+                    } else {
+                        storeEl.innerHTML = `<div class="font-medium">${o.vendor_name || '-'}</div>`;
+                    }
+                    openModal();
+                }catch(err){ console.error(err); alert('Gagal memuat detail pesanan'); }
+            }
+
+            // delegate clicks on table for buttons
+            table.addEventListener('click', function(e){
+                const btn = e.target.closest('.btn-order-detail');
+                if(!btn) return;
+                const id = btn.dataset.id;
+                if(!id) return;
+                loadOrder(id);
+            });
+
+            if(closeTop) closeTop.addEventListener('click', closeModal);
+            if(closeBtn) closeBtn.addEventListener('click', closeModal);
+
+            // accept/reject actions
+            async function postAction(path, payload){
+                try{
+                    const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const res = await fetch(path, { method: 'POST', headers: {'Content-Type':'application/json','X-CSRF-TOKEN': token, 'Accept':'application/json'}, body: JSON.stringify(payload||{}) });
+                    return await res.json();
+                }catch(err){ console.error(err); return { success: false, message: 'Terjadi kesalahan' }; }
+            }
+
+            if(acceptBtn){
+                acceptBtn.addEventListener('click', async function(){
+                    if(!currentOrderId) return;
+                    if(!confirm('Terima pesanan ini?')) return;
+                    const body = await postAction('/orders/' + currentOrderId + '/accept');
+                    if(body.success){ alert('Pesanan diterima'); closeModal(); location.reload(); }
+                    else alert(body.message || 'Gagal menerima pesanan');
+                });
+            }
+
+            if(rejectBtn){
+                rejectBtn.addEventListener('click', async function(){
+                    if(!currentOrderId) return;
+                    const reason = prompt('Alasan penolakan (opsional):');
+                    if(reason === null) return; // cancel
+                    const body = await postAction('/orders/' + currentOrderId + '/reject', { reason });
+                    if(body.success){ alert('Pesanan ditolak'); closeModal(); location.reload(); }
+                    else alert(body.message || 'Gagal menolak pesanan');
+                });
+            }
+        })();
         function toggleUserMenu(e) {
             e.stopPropagation();
             const menu = document.getElementById('user-menu');

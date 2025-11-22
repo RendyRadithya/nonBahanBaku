@@ -162,7 +162,7 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             <div class="flex items-center gap-2">
-                                                <button class="p-1 hover:bg-neutral-100 rounded transition" title="Lihat Detail">
+                                                <button class="p-1 hover:bg-neutral-100 rounded transition btn-tracking" title="Lihat Tracking" data-id="{{ $order->id }}">
                                                     <svg class="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -194,6 +194,65 @@
             </div>
         </main>
     </div>
+            <!-- Tracking Modal -->
+            <div id="tracking-modal" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0,0,0,0.08);">
+                <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+                    <div class="flex items-center justify-between px-5 py-4 border-b">
+                        <div>
+                            <h3 id="tracking-title" class="text-lg font-semibold">Tracking Pesanan</h3>
+                            <div id="tracking-sub" class="text-sm text-neutral-500">ORD-xxxx - Status</div>
+                        </div>
+                        <button id="close-tracking" class="text-neutral-500 hover:text-neutral-800">✕</button>
+                    </div>
+                    <div class="p-5 font-sans text-sm space-y-4">
+                        <!-- Informasi Pesanan -->
+                        <div class="border rounded-lg p-4 bg-neutral-50">
+                            <h4 class="font-semibold mb-2">Informasi Pesanan</h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm text-neutral-700">
+                                <div>No. Pesanan</div><div class="text-right font-medium" id="ti-order-number">-</div>
+                                <div>Tanggal Pesan</div><div class="text-right" id="ti-order-date">-</div>
+                                <div>Produk</div><div class="text-right" id="ti-product">-</div>
+                                <div>Jumlah</div><div class="text-right" id="ti-qty">-</div>
+                                <div>Total Harga</div><div class="text-right font-medium text-red-600" id="ti-total">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="border rounded-lg p-4 bg-white">
+                            <h4 class="font-semibold mb-4">Timeline Pengiriman</h4>
+                            <div id="ti-timeline" class="space-y-4 text-sm text-neutral-700">
+                                <!-- timeline items inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- Informasi Vendor -->
+                        <div class="border rounded-lg p-4 bg-neutral-50">
+                            <h4 class="font-semibold mb-2">Informasi Vendor</h4>
+                            <div class="flex items-center gap-4">
+                                <div id="ti-vendor-avatar" class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-semibold">V</div>
+                                <div class="flex-1">
+                                    <div id="ti-vendor-name" class="font-medium">-</div>
+                                    <div id="ti-vendor-sub" class="text-xs text-neutral-500">Vendor Terpercaya</div>
+                                    <div class="text-xs text-neutral-600 mt-2">
+                                        <div id="ti-vendor-phone"></div>
+                                        <div id="ti-vendor-email"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="block text-xs text-neutral-500 mb-1">No. Resi Pengiriman</label>
+                                <div id="ti-resi" class="bg-white border px-3 py-2 rounded text-sm text-neutral-700">-</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3">
+                            <button id="tracking-close" class="px-4 py-2 rounded-lg border">Tutup</button>
+                            <button id="tracking-confirm" class="px-4 py-2 rounded-lg bg-red-600 text-white">Konfirmasi Terima</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Create Order Modal -->
             <div id="create-order-modal" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0,0,0,0.08);">
                 <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
@@ -351,9 +410,9 @@
                     async function loadVendors(){
                         // predefined vendor list (will be merged with server results)
                         const staticVendors = [
-                            { id: 1001, name: 'sadikun', store_name: 'Sadikun' },
-                            { id: 1002, name: 'kencana_emas', store_name: 'Kencana Emas' },
-                            { id: 1003, name: 'akrilik_jaya', store_name: 'Akrilik Jaya' },
+                            { id: 1001, name: 'sadikun', store_name: 'Sadikun', __static: true },
+                            { id: 1002, name: 'kencana_emas', store_name: 'Kencana Emas', __static: true },
+                            { id: 1003, name: 'akrilik_jaya', store_name: 'Akrilik Jaya', __static: true },
                         ];
 
                         try{
@@ -378,6 +437,7 @@
                                 const label = (v.store_name ? v.store_name + ' ('+v.name+')' : (v.store_name||v.name));
                                 el.textContent = label;
                                 el.dataset.id = v.id; el.dataset.name = v.name; el.dataset.store = v.store_name || v.name;
+                                if(v.__static) el.dataset.static = '1';
                                 el.addEventListener('click', ()=> selectVendor(v));
                                 vendorList.appendChild(el);
                             });
@@ -481,9 +541,19 @@
                         submitBtn.disabled = true;
                         try{
                             const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                            const payload = {
+                                vendor_name: selectedVendor.name,
+                                product_id: selectedProduct.id,
+                                product_name: selectedProduct.name,
+                                quantity: qty,
+                                estimated_delivery: dateInput.value
+                            };
+                            // include vendor_id only when vendor is not a synthetic/static vendor
+                            if(!selectedVendor.__static && selectedVendor.id) payload.vendor_id = selectedVendor.id;
+
                             const res = await fetch('/orders', {
                                 method: 'POST', headers: {'Content-Type':'application/json','X-CSRF-TOKEN':token,'Accept':'application/json'},
-                                body: JSON.stringify({ vendor_name: selectedVendor.name, product_id: selectedProduct.id, product_name: selectedProduct.name, quantity: qty, estimated_delivery: dateInput.value })
+                                body: JSON.stringify(payload)
                             });
                             const body = await res.json();
                             if(res.ok && body.success){
@@ -503,7 +573,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">${formatRp(o.total_price)}</td>
                                     <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">Menunggu</span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">${est}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm"><div class="flex items-center gap-2"><button class="p-1 hover:bg-neutral-100 rounded transition" title="Lihat Detail">👁</button><button class="p-1 hover:bg-neutral-100 rounded transition" title="Download">⬇</button></div></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm"><div class="flex items-center gap-2"><button class="p-1 hover:bg-neutral-100 rounded transition btn-tracking" data-id="${o.id}" title="Lihat Tracking"><svg class=\"w-5 h-5 text-neutral-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\"/><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z\"/></svg></button><button class=\"p-1 hover:bg-neutral-100 rounded transition\" title=\"Download\">⬇</button></div></td>
                                 `;
                                 if(tableBody) tableBody.insertBefore(tr, tableBody.firstChild);
                                 slideToast('Pesanan berhasil dibuat'); closeModal();
@@ -516,6 +586,87 @@
 
                     document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
                     modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
+
+                    /* Tracking modal logic */
+                    const trackingModal = document.getElementById('tracking-modal');
+                    const trackingCloseBtn = document.getElementById('close-tracking');
+                    const trackingClose = document.getElementById('tracking-close');
+                    const trackingConfirm = document.getElementById('tracking-confirm');
+
+                    function openTrackingModal(){ trackingModal.classList.remove('hidden'); trackingModal.classList.add('flex'); }
+                    function closeTrackingModal(){ trackingModal.classList.add('hidden'); trackingModal.classList.remove('flex'); }
+
+                    function renderTimeline(items){
+                        const container = document.getElementById('ti-timeline');
+                        container.innerHTML = '';
+                        items.forEach(it => {
+                            const el = document.createElement('div');
+                            el.className = 'flex items-start gap-3';
+                            el.innerHTML = `
+                                <div class=\"w-9 h-9 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-sm font-medium\">${it.icon||'●'}</div>
+                                <div class=\"flex-1\"> <div class=\"font-medium\">${it.title}</div> <div class=\"text-xs text-neutral-500 mt-1\">${it.date}</div> <div class=\"text-xs text-neutral-600 mt-2\">${it.description||''}</div></div>
+                            `;
+                            container.appendChild(el);
+                        });
+                    }
+
+                    async function loadTracking(orderId){
+                        try{
+                            const res = await fetch('/orders/' + orderId + '/tracking');
+                            if(!res.ok) throw new Error('Tidak dapat memuat tracking');
+                            const body = await res.json();
+                            const o = body.order;
+                            document.getElementById('ti-order-number').textContent = o.order_number || '-';
+                            document.getElementById('tracking-title').textContent = 'Tracking Pesanan';
+                            document.getElementById('tracking-sub').textContent = (o.order_number || '') + ' - ' + (body.status_label || '');
+                            document.getElementById('ti-order-date').textContent = new Date(o.created_at).toLocaleString('id-ID');
+                            document.getElementById('ti-product').textContent = o.product_name || '-';
+                            document.getElementById('ti-qty').textContent = (o.quantity || '-') + ' unit';
+                            document.getElementById('ti-total').textContent = formatRp(o.total_price);
+                            // vendor
+                            if(body.vendor){
+                                document.getElementById('ti-vendor-name').textContent = body.vendor.store_name || body.vendor.name || '-';
+                                document.getElementById('ti-vendor-phone').textContent = body.vendor.phone || '';
+                                document.getElementById('ti-vendor-email').textContent = body.vendor.email || '';
+                                document.getElementById('ti-vendor-avatar').textContent = (body.vendor.store_name || body.vendor.name || 'V').charAt(0).toUpperCase();
+                            } else {
+                                document.getElementById('ti-vendor-name').textContent = o.vendor_name || '-';
+                                document.getElementById('ti-vendor-phone').textContent = '';
+                                document.getElementById('ti-vendor-email').textContent = '';
+                                document.getElementById('ti-vendor-avatar').textContent = (o.vendor_name||'-').charAt(0).toUpperCase();
+                            }
+                            document.getElementById('ti-resi').textContent = body.tracking_number || '-';
+                            renderTimeline(body.timeline || []);
+                            // show confirm if status allows
+                            trackingConfirm.dataset.orderId = orderId;
+                            trackingConfirm.disabled = body.order.status !== 'in_progress' && body.order.status !== 'shipped' && body.order.status !== 'confirmed';
+                            openTrackingModal();
+                        }catch(err){ console.error(err); alert('Gagal mengambil data tracking'); }
+                    }
+
+                    // handle delegation for tracking buttons in table (existing and newly added rows)
+                    document.querySelector('table').addEventListener('click', function(e){
+                        const btn = e.target.closest('.btn-tracking');
+                        if(!btn) return;
+                        const id = btn.dataset.id;
+                        if(!id) return;
+                        loadTracking(id);
+                    });
+
+                    if(trackingCloseBtn) trackingCloseBtn.addEventListener('click', closeTrackingModal);
+                    if(trackingClose) trackingClose.addEventListener('click', closeTrackingModal);
+
+                    trackingConfirm.addEventListener('click', async function(){
+                        const id = this.dataset.orderId; if(!id) return;
+                        if(!confirm('Konfirmasi terima pesanan?')) return;
+                        try{
+                            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                            const res = await fetch('/orders/' + id + '/confirm', { method: 'POST', headers: {'X-CSRF-TOKEN': token, 'Accept':'application/json'} });
+                            const body = await res.json();
+                            if(res.ok && body.success){ slideToast('Pesanan ditandai selesai'); closeTrackingModal(); setTimeout(()=>location.reload(),600); }
+                            else alert(body.message || 'Gagal konfirmasi');
+                        }catch(err){ console.error(err); alert('Terjadi kesalahan'); }
+                    });
                 })();
             </script>
 </body>

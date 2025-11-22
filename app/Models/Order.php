@@ -12,13 +12,20 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'vendor_id',
         'vendor_name',
         'product_name',
         'quantity',
         'total_price',
+        'tracking_number',
         'status',
         'estimated_delivery',
     ];
+
+    public function vendor()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'vendor_id');
+    }
 
     protected $casts = [
         'estimated_delivery' => 'date',
