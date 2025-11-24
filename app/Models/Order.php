@@ -37,6 +37,8 @@ class Order extends Model
         switch ($this->status) {
             case 'completed':
                 return 'bg-green-100 text-green-800';
+            case 'shipped':
+                return 'bg-indigo-100 text-indigo-800';
             case 'in_progress':
                 return 'bg-purple-100 text-purple-800';
             case 'confirmed':
@@ -55,6 +57,8 @@ class Order extends Model
         switch ($this->status) {
             case 'completed':
                 return 'Selesai';
+            case 'shipped':
+                return 'Dikirim';
             case 'in_progress':
                 return 'Sedang Diproses';
             case 'confirmed':

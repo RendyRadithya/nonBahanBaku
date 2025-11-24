@@ -96,6 +96,7 @@
                         <option value="pending">Menunggu Konfirmasi</option>
                         <option value="confirmed">Dikonfirmasi</option>
                         <option value="in_progress">Sedang Diproses</option>
+                        <option value="shipped">Dikirim</option>
                         <option value="completed">Selesai</option>
                     </select>
                 </div>
@@ -167,60 +168,87 @@
         </div>
     </div>
 
+
     <!-- Tracking Modal -->
     <div id="tracking-modal" class="fixed inset-0 hidden items-center justify-center z-50" style="background-color: rgba(0,0,0,0.5);">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
-            <div class="flex items-center justify-between px-5 py-4 border-b">
+        <div class="bg-neutral-50 rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="bg-white px-6 py-4 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10">
                 <div>
-                    <h3 id="tracking-title" class="text-lg font-semibold">Tracking Pesanan</h3>
-                    <div id="tracking-sub" class="text-sm text-neutral-500">ORD-xxxx - Status</div>
+                    <h3 class="text-lg font-bold text-neutral-900">Tracking Pesanan</h3>
+                    <div id="tracking-sub" class="text-sm text-neutral-500 mt-0.5">ORD-xxxx - Status</div>
                 </div>
-                <button id="close-tracking" class="text-neutral-500 hover:text-neutral-800">✕</button>
+                <button id="close-tracking" class="text-neutral-400 hover:text-neutral-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </div>
-            <div class="p-5 font-sans text-sm space-y-4">
+
+            <div class="p-6 space-y-5">
                 <!-- Informasi Pesanan -->
-                <div class="border rounded-lg p-4 bg-neutral-50">
-                    <h4 class="font-semibold mb-2">Informasi Pesanan</h4>
-                    <div class="grid grid-cols-2 gap-2 text-sm text-neutral-700">
-                        <div>No. Pesanan</div><div class="text-right font-medium" id="ti-order-number">-</div>
-                        <div>Tanggal Pesan</div><div class="text-right" id="ti-order-date">-</div>
-                        <div>Produk</div><div class="text-right" id="ti-product">-</div>
-                        <div>Jumlah</div><div class="text-right" id="ti-qty">-</div>
-                        <div>Total Harga</div><div class="text-right font-medium text-red-600" id="ti-total">-</div>
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-neutral-100">
+                    <h4 class="font-semibold text-neutral-900 mb-4 text-sm">Informasi Pesanan</h4>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600">No. Pesanan</span>
+                            <span class="font-semibold text-neutral-900" id="ti-order-number">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600">Tanggal Pesan</span>
+                            <span class="text-neutral-900" id="ti-order-date">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600">Produk</span>
+                            <span class="text-neutral-900 font-medium" id="ti-product">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600">Jumlah</span>
+                            <span class="text-neutral-900" id="ti-qty">-</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t border-neutral-100">
+                            <span class="text-neutral-600 font-medium">Total Harga</span>
+                            <span class="font-bold text-red-600" id="ti-total">-</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Timeline -->
-                <div class="border rounded-lg p-4 bg-white">
-                    <h4 class="font-semibold mb-4">Timeline Pengiriman</h4>
-                    <div id="ti-timeline" class="space-y-4 text-sm text-neutral-700">
-                        <!-- timeline items inserted here -->
+                <!-- Timeline Pengiriman -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-neutral-100">
+                    <h4 class="font-semibold text-neutral-900 mb-5 text-sm">Timeline Pengiriman</h4>
+                    <div id="ti-timeline" class="space-y-4">
+                        <!-- Timeline items will be inserted here -->
                     </div>
                 </div>
 
                 <!-- Informasi Vendor -->
-                <div class="border rounded-lg p-4 bg-neutral-50">
-                    <h4 class="font-semibold mb-2">Informasi Vendor</h4>
-                    <div class="flex items-center gap-4">
-                        <div id="ti-vendor-avatar" class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-semibold">V</div>
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-neutral-100">
+                    <h4 class="font-semibold text-neutral-900 mb-4 text-sm">Informasi Vendor</h4>
+                    <div class="flex items-start gap-3 mb-4">
+                        <div id="ti-vendor-avatar" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">V</div>
                         <div class="flex-1">
-                            <div id="ti-vendor-name" class="font-medium">-</div>
-                            <div id="ti-vendor-sub" class="text-xs text-neutral-500">Vendor Terpercaya</div>
-                            <div class="text-xs text-neutral-600 mt-2">
-                                <div id="ti-vendor-phone"></div>
-                                <div id="ti-vendor-email"></div>
-                            </div>
+                            <div id="ti-vendor-name" class="font-semibold text-neutral-900">-</div>
+                            <div class="text-xs text-neutral-500 mt-0.5">Vendor Terpercaya</div>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <label class="block text-xs text-neutral-500 mb-1">No. Resi Pengiriman</label>
-                        <div id="ti-resi" class="bg-white border px-3 py-2 rounded text-sm text-neutral-700">-</div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2 text-neutral-600">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                            <span id="ti-vendor-phone">-</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-neutral-600">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            <span id="ti-vendor-email" class="break-all">-</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-neutral-100">
+                        <label class="block text-xs text-neutral-500 mb-2">No. Resi Pengiriman</label>
+                        <div id="ti-resi" class="bg-neutral-50 border border-neutral-200 px-3 py-2 rounded-lg text-sm font-mono text-neutral-700">-</div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-3">
-                    <button id="tracking-close" class="px-4 py-2 rounded-lg border">Tutup</button>
-                    <button id="tracking-confirm" class="px-4 py-2 rounded-lg bg-red-600 text-white">Konfirmasi Terima</button>
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button id="tracking-close" class="px-5 py-2.5 rounded-lg border border-neutral-300 text-neutral-700 font-medium hover:bg-neutral-50 transition">Tutup</button>
+                    <button id="tracking-confirm" class="px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition shadow-sm">Konfirmasi Terima</button>
                 </div>
             </div>
         </div>
@@ -380,26 +408,23 @@
             }
 
             async function loadVendors(){
-                const staticVendors = [
-                    { id: 1001, name: 'sadikun', store_name: 'Sadikun', __static: true },
-                    { id: 1002, name: 'kencana_emas', store_name: 'Kencana Emas', __static: true },
-                    { id: 1003, name: 'akrilik_jaya', store_name: 'Akrilik Jaya', __static: true },
-                ];
-
                 try{
                     const res = await fetch('/vendors');
-                    let fetched = [];
-                    if(res.ok) fetched = await res.json();
-
-                    const map = new Map();
-                    fetched.forEach(v => map.set((v.store_name||v.name).toLowerCase(), v));
-                    staticVendors.forEach(s => { if(!map.has(s.store_name.toLowerCase())) map.set(s.store_name.toLowerCase(), s); });
-                    vendors = Array.from(map.values()).filter(v => {
-                        const label = (v.store_name || v.name || '').toLowerCase();
-                        return !(label.includes('mcd') || label.includes('venti'));
-                    });
+                    if(res.ok) {
+                        vendors = await res.json();
+                    } else {
+                        vendors = [];
+                    }
 
                     vendorList.innerHTML = '';
+                    if(vendors.length === 0){
+                         const el = document.createElement('div');
+                         el.className = 'px-4 py-3 text-neutral-500 italic';
+                         el.textContent = 'Tidak ada vendor ditemukan';
+                         vendorList.appendChild(el);
+                         return;
+                    }
+
                     vendors.forEach(v => {
                         const el = document.createElement('div');
                         el.className = 'px-4 py-3 hover:bg-red-50 cursor-pointer';
@@ -409,15 +434,8 @@
                         vendorList.appendChild(el);
                     });
                 }catch(err){
-                    vendors = staticVendors;
-                    vendorList.innerHTML = '';
-                    vendors.forEach(v => {
-                        const el = document.createElement('div');
-                        el.className = 'px-4 py-3 hover:bg-red-50 cursor-pointer';
-                        el.textContent = v.store_name;
-                        el.addEventListener('click', ()=> selectVendor(v));
-                        vendorList.appendChild(el);
-                    });
+                    console.error(err);
+                    vendorList.innerHTML = '<div class="px-4 py-3 text-red-500">Gagal memuat vendor</div>';
                 }
             }
 
@@ -426,31 +444,23 @@
                 vendorLabel.textContent = v.store_name ? v.store_name + ' ('+v.name+')' : (v.store_name||v.name);
                 vendorList.classList.add('hidden');
 
-                const staticProducts = {
-                    'sadikun': [
-                        { id: 2001, name: 'Gas LPG 12kg', price: 350000 },
-                        { id: 2002, name: 'Gas LPG 5.5kg', price: 250000 },
-                    ],
-                    'kencana emas': [
-                        { id: 3001, name: 'CO₂ Tank 25kg', price: 175000 },
-                        { id: 3002, name: 'Translite Menu A3', price: 300000 },
-                    ],
-                    'akrilik jaya': [
-                        { id: 4001, name: 'Akrilik Display Stand', price: 120000 },
-                    ]
-                };
-
                 try{
                     const res = await fetch('/vendors/'+v.id+'/products');
-                    let fetched = res.ok ? await res.json() : [];
-                    if(!fetched || fetched.length === 0){
-                        const key = (v.store_name || v.name).toLowerCase();
-                        fetched = staticProducts[key] || [];
+                    products = res.ok ? await res.json() : [];
+                    
+                    if(products.length === 0){
+                         // Fallback for demo if no products found in DB for this vendor
+                         // Only if it's the seeded vendor 'Vendor Sadikun'
+                         if((v.store_name||'').toLowerCase().includes('sadikun')){
+                             products = [
+                                { id: 9901, name: 'Gas LPG 12kg', price: 350000 },
+                                { id: 9902, name: 'Gas LPG 5.5kg', price: 250000 },
+                             ];
+                         }
                     }
-                    products = fetched;
                 }catch(err){
-                    const key = (v.store_name || v.name).toLowerCase();
-                    products = staticProducts[key] || [];
+                    console.error(err);
+                    products = [];
                 }
 
                 productList.innerHTML = '';
@@ -496,7 +506,7 @@
                         quantity: qty,
                         estimated_delivery: dateInput.value
                     };
-                    if(!selectedVendor.__static && selectedVendor.id) payload.vendor_id = selectedVendor.id;
+                    if(selectedVendor.id) payload.vendor_id = selectedVendor.id;
 
                     const res = await fetch('/orders', {
                         method: 'POST', 
@@ -530,12 +540,36 @@
             function renderTimeline(items){
                 const container = document.getElementById('ti-timeline');
                 container.innerHTML = '';
-                items.forEach(it => {
+                
+                const statusConfig = {
+                    'pending': { icon: '✓', color: 'bg-green-50 text-green-600 border-green-200', label: 'Pesanan Dibuat', desc: 'Pesanan telah berhasil dibuat dan menunggu konfirmasi vendor' },
+                    'confirmed': { icon: '✓', color: 'bg-blue-50 text-blue-600 border-blue-200', label: 'Dikonfirmasi Vendor', desc: 'Vendor telah mengkonfirmasi pesanan Anda' },
+                    'in_progress': { icon: '⚙', color: 'bg-purple-50 text-purple-600 border-purple-200', label: 'Sedang Diproses', desc: 'Pesanan sedang dikemas oleh vendor' },
+                    'shipped': { icon: '🚚', color: 'bg-orange-50 text-orange-600 border-orange-200', label: 'Dalam Pengiriman', desc: 'Pesanan sedang dikirim ke lokasi' },
+                    'completed': { icon: '✓', color: 'bg-gray-100 text-gray-400 border-gray-200', label: 'Pesanan Selesai', desc: 'Menunggu pesanan selesai' },
+                    'rejected': { icon: '✕', color: 'bg-red-50 text-red-600 border-red-200', label: 'Pesanan Ditolak', desc: 'Pesanan ditolak oleh vendor' }
+                };
+                
+                items.forEach((it, index) => {
+                    const config = statusConfig[it.status] || statusConfig['pending'];
+                    const isLast = index === items.length - 1;
+                    const isActive = it.active !== false;
+                    
                     const el = document.createElement('div');
-                    el.className = 'flex items-start gap-3';
+                    el.className = 'flex gap-3';
                     el.innerHTML = `
-                        <div class="w-9 h-9 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-sm font-medium">${it.icon||'●'}</div>
-                        <div class="flex-1"> <div class="font-medium">${it.title}</div> <div class="text-xs text-neutral-500 mt-1">${it.date}</div> <div class="text-xs text-neutral-600 mt-2">${it.description||''}</div></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full ${isActive ? config.color : 'bg-gray-100 text-gray-400 border-gray-200'} border-2 flex items-center justify-center font-semibold flex-shrink-0">
+                                ${config.icon}
+                            </div>
+                            ${!isLast ? '<div class="w-0.5 h-full bg-neutral-200 my-1"></div>' : ''}
+                        </div>
+                        <div class="flex-1 pb-6">
+                            <div class="${isActive ? 'font-semibold text-neutral-900' : 'font-medium text-neutral-400'}">${it.title || config.label}</div>
+                            <div class="text-xs ${isActive ? 'text-neutral-500' : 'text-neutral-400'} mt-1">${it.date || ''}</div>
+                            <div class="text-sm ${isActive ? 'text-neutral-600' : 'text-neutral-400'} mt-2">${it.description || config.desc}</div>
+                            ${it.estimated ? `<div class="text-xs text-neutral-500 mt-2">⏱ Est. tiba: ${it.estimated}</div>` : ''}
+                        </div>
                     `;
                     container.appendChild(el);
                 });
@@ -544,11 +578,20 @@
             async function loadTracking(orderId){
                 try{
                     const res = await fetch('/orders/' + orderId + '/tracking');
-                    if(!res.ok) throw new Error('Tidak dapat memuat tracking');
+                    if(!res.ok) {
+                        const errorText = await res.text();
+                        console.error('Response error:', errorText);
+                        throw new Error('Tidak dapat memuat tracking (Status: ' + res.status + ')');
+                    }
                     const body = await res.json();
+                    console.log('Tracking data:', body);
+                    
+                    if(body.error) {
+                        throw new Error(body.message || 'Server error');
+                    }
+                    
                     const o = body.order;
                     document.getElementById('ti-order-number').textContent = o.order_number || '-';
-                    document.getElementById('tracking-title').textContent = 'Tracking Pesanan';
                     document.getElementById('tracking-sub').textContent = (o.order_number || '') + ' - ' + (body.status_label || '');
                     document.getElementById('ti-order-date').textContent = new Date(o.created_at).toLocaleString('id-ID');
                     document.getElementById('ti-product').textContent = o.product_name || '-';
@@ -556,19 +599,32 @@
                     document.getElementById('ti-total').textContent = formatRp(o.total_price);
                     if(body.vendor){
                         document.getElementById('ti-vendor-name').textContent = body.vendor.store_name || body.vendor.name || '-';
-                        document.getElementById('ti-vendor-phone').textContent = body.vendor.phone || '';
-                        document.getElementById('ti-vendor-email').textContent = body.vendor.email || '';
+                        document.getElementById('ti-vendor-phone').textContent = body.vendor.phone || '-';
+                        document.getElementById('ti-vendor-email').textContent = body.vendor.email || '-';
                         document.getElementById('ti-vendor-avatar').textContent = (body.vendor.store_name || body.vendor.name || 'V').charAt(0).toUpperCase();
                     } else {
                         document.getElementById('ti-vendor-name').textContent = o.vendor_name || '-';
-                        document.getElementById('ti-vendor-avatar').textContent = (o.vendor_name||'-').charAt(0).toUpperCase();
+                        document.getElementById('ti-vendor-phone').textContent = '-';
+                        document.getElementById('ti-vendor-email').textContent = '-';
+                        document.getElementById('ti-vendor-avatar').textContent = (o.vendor_name||'V').charAt(0).toUpperCase();
                     }
                     document.getElementById('ti-resi').textContent = body.tracking_number || '-';
                     renderTimeline(body.timeline || []);
                     trackingConfirm.dataset.orderId = orderId;
-                    trackingConfirm.disabled = body.order.status !== 'in_progress' && body.order.status !== 'shipped' && body.order.status !== 'confirmed';
+                    
+                    // Only enable if status is 'shipped'
+                    const isShipped = body.order.status === 'shipped';
+                    trackingConfirm.disabled = !isShipped;
+                    if(isShipped){
+                        trackingConfirm.classList.remove('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        trackingConfirm.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
                     openTrackingModal();
-                }catch(err){ console.error(err); alert('Gagal mengambil data tracking'); }
+                }catch(err){ 
+                    console.error('Tracking error:', err); 
+                    alert('Gagal mengambil data tracking: ' + err.message); 
+                }
             }
 
             document.querySelector('table').addEventListener('click', function(e){

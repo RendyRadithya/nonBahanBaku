@@ -30,8 +30,24 @@ Route::get('/dashboard', function () {
         ));
     } 
     
+    
     if ($user->role === 'vendor') {
-        return view('dashboards.vendor');
+        // Data for Vendor Dashboard
+        $orders = Order::where('vendor_id', $user->id)->latest()->get();
+        $totalOrders = $orders->count();
+        $newOrders = $orders->where('status', 'pending')->count();
+        $inProgress = $orders->whereIn('status', ['confirmed', 'in_progress'])->count();
+        $completed = $orders->whereIn('status', ['completed', 'shipped'])->count();
+        $totalSales = $orders->whereIn('status', ['completed', 'shipped'])->sum('total_price');
+        
+        return view('dashboards.vendor', compact(
+            'orders',
+            'totalOrders',
+            'newOrders',
+            'inProgress',
+            'completed',
+            'totalSales'
+        ));
     }
 
     if ($user->role === 'admin') {
@@ -46,6 +62,7 @@ use Illuminate\Http\Request;
 use App\Events\OrderCreated;
 
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\VendorOrderController;
 
 Route::middleware('auth')->group(function () {
     Route::resource('products', ProductController::class);
@@ -91,29 +108,107 @@ Route::middleware('auth')->group(function () {
         // Dispatch Event
         if ($order->vendor_id) {
             OrderCreated::dispatch($order);
+            
+            // Send Database Notification
+            $vendor = \App\Models\User::find($order->vendor_id);
+            if($vendor){
+                $vendor->notify(new \App\Notifications\NewOrderNotification($order));
+            }
         }
 
         return response()->json(['success' => true, 'order' => $order]);
     });
     
     Route::get('/orders/{id}/tracking', function ($id) {
-        $order = Order::findOrFail($id);
-        $vendor = \App\Models\User::find($order->vendor_id);
-        
-        $timeline = [
-            ['title' => 'Pesanan Dibuat', 'date' => $order->created_at->format('d M Y H:i'), 'icon' => '📝', 'description' => 'Pesanan berhasil dibuat'],
-        ];
-        
-        if($order->status !== 'pending'){
-             $timeline[] = ['title' => 'Pesanan Dikonfirmasi', 'date' => $order->updated_at->format('d M Y H:i'), 'icon' => '✅', 'description' => 'Vendor menerima pesanan'];
+        try {
+            $order = Order::findOrFail($id);
+            $vendor = \App\Models\User::find($order->vendor_id);
+            
+            // Build comprehensive timeline
+            $timeline = [];
+            $statusOrder = ['pending', 'confirmed', 'in_progress', 'shipped', 'completed'];
+            $currentStatusIndex = array_search($order->status, $statusOrder);
+            
+            // If status is 'rejected', treat it specially
+            if ($currentStatusIndex === false) {
+                // For rejected orders, show only the first step and rejection
+                $timeline[] = [
+                    'status' => 'pending',
+                    'title' => 'Pesanan Dibuat',
+                    'date' => $order->created_at ? $order->created_at->format('d M Y, H:i') : '-',
+                    'description' => 'Pesanan telah berhasil dibuat',
+                    'active' => true
+                ];
+                
+                $timeline[] = [
+                    'status' => 'rejected',
+                    'title' => 'Pesanan Ditolak',
+                    'date' => $order->updated_at ? $order->updated_at->format('d M Y, H:i') : '-',
+                    'description' => 'Pesanan ditolak oleh vendor',
+                    'active' => true
+                ];
+            } else {
+                // Pesanan Dibuat - always shown
+                $timeline[] = [
+                    'status' => 'pending',
+                    'title' => 'Pesanan Dibuat',
+                    'date' => $order->created_at ? $order->created_at->format('d M Y, H:i') : '-',
+                    'description' => 'Pesanan telah berhasil dibuat dan menunggu konfirmasi vendor',
+                    'active' => true
+                ];
+                
+                // Dikonfirmasi Vendor
+                $timeline[] = [
+                    'status' => 'confirmed',
+                    'title' => 'Dikonfirmasi Vendor',
+                    'date' => ($currentStatusIndex >= 1 && $order->updated_at) ? $order->updated_at->format('d M Y, H:i') : '',
+                    'description' => 'Vendor telah mengkonfirmasi pesanan Anda',
+                    'active' => $currentStatusIndex >= 1
+                ];
+                
+                // Sedang Diproses
+                $timeline[] = [
+                    'status' => 'in_progress',
+                    'title' => 'Sedang Diproses',
+                    'date' => ($currentStatusIndex >= 2 && $order->updated_at) ? $order->updated_at->format('d M Y, H:i') : '',
+                    'description' => 'Pesanan sedang dikemas oleh vendor',
+                    'active' => $currentStatusIndex >= 2
+                ];
+                
+                // Dalam Pengiriman
+                $timeline[] = [
+                    'status' => 'shipped',
+                    'title' => 'Dalam Pengiriman',
+                    'date' => ($currentStatusIndex >= 3 && $order->updated_at) ? $order->updated_at->format('d M Y, H:i') : '',
+                    'description' => 'Pesanan sedang dikirim ke lokasi',
+                    'estimated' => ($order->estimated_delivery) ? $order->estimated_delivery->format('d M Y') : null,
+                    'active' => $currentStatusIndex >= 3
+                ];
+                
+                // Pesanan Selesai
+                $timeline[] = [
+                    'status' => 'completed',
+                    'title' => 'Pesanan Selesai',
+                    'date' => ($currentStatusIndex >= 4 && $order->updated_at) ? $order->updated_at->format('d M Y, H:i') : '',
+                    'description' => $currentStatusIndex >= 4 ? 'Pesanan telah selesai' : 'Menunggu pesanan selesai',
+                    'active' => $currentStatusIndex >= 4
+                ];
+            }
+            
+            return response()->json([
+                'order' => $order,
+                'vendor' => $vendor,
+                'status_label' => $order->getStatusLabel(),
+                'tracking_number' => $order->tracking_number ?? 'JKT3XXZ12345',
+                'timeline' => $timeline
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Tracking error: ' . $e->getMessage());
+            return response()->json([
+                'error' => true,
+                'message' => 'Gagal memuat tracking: ' . $e->getMessage()
+            ], 500);
         }
-        
-        return response()->json([
-            'order' => $order,
-            'vendor' => $vendor,
-            'status_label' => $order->getStatusLabel(),
-            'timeline' => $timeline
-        ]);
     });
 
     Route::post('/orders/{id}/confirm', function ($id) {
@@ -122,6 +217,9 @@ Route::middleware('auth')->group(function () {
         $order->save();
         return response()->json(['success' => true]);
     });
+
+    Route::get('/vendor/orders', [VendorOrderController::class, 'index'])->name('vendor.orders.index');
+    Route::patch('/vendor/orders/{id}/status', [VendorOrderController::class, 'updateStatus'])->name('vendor.orders.updateStatus');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

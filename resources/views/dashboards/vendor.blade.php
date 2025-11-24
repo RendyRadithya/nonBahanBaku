@@ -238,18 +238,15 @@
             const acceptBtn = document.getElementById('vo-accept');
             const rejectBtn = document.getElementById('vo-reject');
             let currentOrderId = null;
+            let currentStatus = null;
 
-            // Real-time listener
+            // Real-time listener (keep existing if working, otherwise ignore for now)
             if(window.Echo){
                 window.Echo.channel('vendor.{{ Auth::id() }}')
                     .listen('.order.created', (e) => {
                         console.log('New Order Received:', e.order);
-                        
-                        // Play sound
-                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-                        audio.play().catch(e=>console.log(e));
-
-                        // Show toast/alert
+                        // ... (keep existing toast logic) ...
+                         // Show toast/alert
                         const toast = document.createElement('div');
                         toast.className = 'fixed top-4 right-4 bg-blue-600 text-white px-6 py-4 rounded-lg shadow-xl z-50 animate-bounce cursor-pointer';
                         toast.innerHTML = `
@@ -260,37 +257,6 @@
                         toast.onclick = () => location.reload();
                         document.body.appendChild(toast);
                         setTimeout(() => toast.remove(), 5000);
-
-                        // Update Stats (Simple increment)
-                        const totalEl = document.querySelector('.text-3xl.font-bold.text-neutral-900'); // First one is Total
-                        if(totalEl) totalEl.textContent = parseInt(totalEl.textContent) + 1;
-                        
-                        const newEl = document.querySelector('.text-3xl.font-bold.text-blue-600'); // New Orders
-                        if(newEl) newEl.textContent = parseInt(newEl.textContent) + 1;
-
-                        // Prepend to table
-                        if(tableBody){
-                            const row = document.createElement('tr');
-                            row.className = 'border-t bg-blue-50 transition-colors duration-1000';
-                            row.innerHTML = `
-                                <td class="py-3 px-4 font-bold text-blue-700">${e.order.order_number}</td>
-                                <td class="py-3 px-4">${new Date().toLocaleDateString('id-ID')}</td>
-                                <td class="py-3 px-4">${e.order.vendor_name || '-'}</td>
-                                <td class="py-3 px-4">${e.order.product_name}</td>
-                                <td class="py-3 px-4">${e.order.quantity}</td>
-                                <td class="py-3 px-4">Rp ${Number(e.order.total_price).toLocaleString('id-ID')}</td>
-                                <td class="py-3 px-4"><span class="inline-block px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-700">pending</span></td>
-                                <td class="py-3 px-4">
-                                    <button class="inline-flex items-center justify-center w-9 h-9 border rounded-md text-neutral-600 btn-order-detail" data-id="${e.order.id}" title="Lihat Detail">👁</button>
-                                </td>
-                            `;
-                            // If empty row exists, remove it
-                            if(tableBody.children[0] && tableBody.children[0].textContent.includes('Belum ada pesanan')) tableBody.innerHTML = '';
-                            tableBody.insertBefore(row, tableBody.firstChild);
-                            
-                            // Highlight effect
-                            setTimeout(() => row.classList.remove('bg-blue-50'), 3000);
-                        }
                     });
             }
 
@@ -304,6 +270,8 @@
                     const body = await res.json();
                     const o = body.order;
                     currentOrderId = o.id;
+                    currentStatus = o.status;
+
                     document.getElementById('vo-order-number').textContent = o.order_number || '-';
                     document.getElementById('vo-order-date').textContent = new Date(o.created_at).toLocaleDateString('id-ID');
                     document.getElementById('vo-product').textContent = o.product_name || '-';
@@ -311,18 +279,66 @@
                     document.getElementById('vo-estimated').textContent = o.estimated_delivery ? new Date(o.estimated_delivery).toLocaleDateString('id-ID') : '-';
                     document.getElementById('vo-total').textContent = (function(v){ return 'Rp ' + Number(v||0).toLocaleString('id-ID'); })(o.total_price);
                     document.getElementById('vo-notes').textContent = o.notes || '-';
+                    
                     // status badge
                     document.getElementById('vo-status-badge').textContent = body.status_label || (o.status||'-');
+                    
+                    // Update buttons based on status
+                    updateModalButtons(o.status);
+
                     // vendor/store info (buyer)
                     const storeEl = document.getElementById('vo-store-info');
                     storeEl.innerHTML = '';
-                    if(body.vendor){
-                        storeEl.innerHTML = `<div class="font-medium">${body.vendor.store_name || body.vendor.name}</div><div class="text-xs text-neutral-500 mt-1">${body.vendor.email || ''}</div><div class="text-xs mt-1">${body.vendor.phone || ''}</div>`;
-                    } else {
-                        storeEl.innerHTML = `<div class="font-medium">${o.vendor_name || '-'}</div>`;
+                    // In vendor view, we want to see who ordered (Manager Stock / User)
+                    // The API returns 'vendor' as the one who fulfills, but here we might want the buyer info if available.
+                    // For now, let's just show the vendor name (self) or maybe the user who ordered if we had that info in API.
+                    // The current API /orders/{id}/tracking returns 'vendor' (which is us).
+                    // Let's just keep it as is or hide it.
+                     if(body.vendor){
+                        storeEl.innerHTML = `<div class="font-medium">Pemesanan via: ${body.vendor.store_name || body.vendor.name}</div>`;
                     }
+                    
                     openModal();
                 }catch(err){ console.error(err); alert('Gagal memuat detail pesanan'); }
+            }
+
+            function updateModalButtons(status){
+                const actionContainer = document.querySelector('#vendor-order-modal .flex.items-center.justify-end.gap-3');
+                // Clear existing custom buttons (keep Close)
+                // Actually the buttons are in a different div in the HTML: 
+                // <div class="flex items-start justify-between"> ... buttons ... </div>
+                
+                // Let's find the button container in the top section
+                const btnContainer = document.querySelector('#vo-accept').parentElement;
+                btnContainer.innerHTML = ''; // Clear
+
+                if(status === 'pending'){
+                    btnContainer.innerHTML = `
+                        <button id="vo-reject" class="px-4 py-2 rounded-lg border text-red-600 hover:bg-red-50">Tolak</button>
+                        <button id="vo-accept" class="px-4 py-2 rounded-lg bg-blue-600 text-white ml-3 hover:bg-blue-700">Terima Pesanan</button>
+                    `;
+                } else if(status === 'confirmed'){
+                    btnContainer.innerHTML = `
+                        <button id="vo-process" class="px-4 py-2 rounded-lg bg-purple-600 text-white ml-3 hover:bg-purple-700">Proses Pesanan</button>
+                    `;
+                } else if(status === 'in_progress'){
+                    btnContainer.innerHTML = `
+                        <button id="vo-ship" class="px-4 py-2 rounded-lg bg-indigo-600 text-white ml-3 hover:bg-indigo-700">Kirim Pesanan</button>
+                    `;
+                } else {
+                    btnContainer.innerHTML = `<span class="text-sm text-neutral-500 italic">Tidak ada aksi tersedia</span>`;
+                }
+
+                // Re-attach listeners
+                const newAccept = document.getElementById('vo-accept');
+                const newReject = document.getElementById('vo-reject');
+                const newProcess = document.getElementById('vo-process');
+                const newShip = document.getElementById('vo-ship');
+
+                if(newAccept) newAccept.onclick = () => updateStatus('confirmed');
+                if(newReject) newReject.onclick = () => updateStatus('rejected');
+                if(newProcess) newProcess.onclick = () => updateStatus('in_progress');
+                if(newShip) newShip.onclick = () => updateStatus('shipped');
             }
 
             // delegate clicks on table for buttons
@@ -340,34 +356,35 @@
             if(closeTop) closeTop.addEventListener('click', closeModal);
             if(closeBtn) closeBtn.addEventListener('click', closeModal);
 
-            // accept/reject actions
-            async function postAction(path, payload){
+            // Update Status Action
+            async function updateStatus(status){
+                if(!currentOrderId) return;
+                if(!confirm('Ubah status pesanan menjadi ' + status + '?')) return;
+                
                 try{
                     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                    const res = await fetch(path, { method: 'POST', headers: {'Content-Type':'application/json','X-CSRF-TOKEN': token, 'Accept':'application/json'}, body: JSON.stringify(payload||{}) });
-                    return await res.json();
-                }catch(err){ console.error(err); return { success: false, message: 'Terjadi kesalahan' }; }
-            }
-
-            if(acceptBtn){
-                acceptBtn.addEventListener('click', async function(){
-                    if(!currentOrderId) return;
-                    if(!confirm('Terima pesanan ini?')) return;
-                    const body = await postAction('/orders/' + currentOrderId + '/accept');
-                    if(body.success){ alert('Pesanan diterima'); closeModal(); location.reload(); }
-                    else alert(body.message || 'Gagal menerima pesanan');
-                });
-            }
-
-            if(rejectBtn){
-                rejectBtn.addEventListener('click', async function(){
-                    if(!currentOrderId) return;
-                    const reason = prompt('Alasan penolakan (opsional):');
-                    if(reason === null) return; // cancel
-                    const body = await postAction('/orders/' + currentOrderId + '/reject', { reason });
-                    if(body.success){ alert('Pesanan ditolak'); closeModal(); location.reload(); }
-                    else alert(body.message || 'Gagal menolak pesanan');
-                });
+                    const res = await fetch('/vendor/orders/' + currentOrderId + '/status', { 
+                        method: 'PATCH', 
+                        headers: {
+                            'Content-Type':'application/json',
+                            'X-CSRF-TOKEN': token, 
+                            'Accept':'application/json'
+                        }, 
+                        body: JSON.stringify({ status: status }) 
+                    });
+                    const body = await res.json();
+                    
+                    if(body.success){ 
+                        alert(body.message); 
+                        closeModal(); 
+                        location.reload(); 
+                    } else { 
+                        alert(body.message || 'Gagal memperbarui status'); 
+                    }
+                }catch(err){ 
+                    console.error(err); 
+                    alert('Terjadi kesalahan saat menghubungi server'); 
+                }
             }
         })();
     </script>

@@ -47,6 +47,9 @@
 						<a href="#kontak" class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition">Kontak</a>
 					</nav>
 					<div class="flex items-center gap-3">
+                        @auth
+                            @include('components.notifications')
+                        @endauth
 						<a href="/login" class="inline-flex items-center gap-2 rounded-md bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition">
 							<span>🔐</span>
 							Login
