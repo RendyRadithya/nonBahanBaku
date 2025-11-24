@@ -12,7 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendor_id')->constrained('users')->onDelete('cascade');
             $table->string('name');
+            $table->text('description')->nullable();
             $table->decimal('price', 15, 2)->default(0);
+            $table->integer('stock')->default(0);
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }

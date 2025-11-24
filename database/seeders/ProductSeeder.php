@@ -28,7 +28,9 @@ class ProductSeeder extends Seeder
                 Product::create([
                     'vendor_id' => $vendor->id,
                     'name' => ($vendor->store_name ? $vendor->store_name : $vendor->name) . ' Product ' . $i,
+                    'description' => 'Deskripsi produk contoh ' . $i,
                     'price' => rand(25000, 250000),
+                    'stock' => rand(10, 100),
                 ]);
             }
         }

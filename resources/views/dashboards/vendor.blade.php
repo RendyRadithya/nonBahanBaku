@@ -12,9 +12,15 @@
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Title -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold text-neutral-900">Dashboard Vendor</h1>
-            <p class="text-sm text-neutral-500">Kelola pesanan dan pengiriman - {{ Auth::user()->store_name ?? Auth::user()->name }}</p>
+        <div class="mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-semibold text-neutral-900">Dashboard Vendor</h1>
+                <p class="text-sm text-neutral-500">Kelola pesanan dan pengiriman - {{ Auth::user()->store_name ?? Auth::user()->name }}</p>
+            </div>
+            <a href="{{ route('products.index') }}" class="px-4 py-2 bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition shadow-sm font-medium flex items-center gap-2">
+                <svg class="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                Manajemen Produk
+            </a>
         </div>
 
         <!-- Stat Cards: equal-width responsive row without horizontal scroll -->
@@ -222,15 +228,71 @@
     </div>
 
     <!-- Vendor order modal logic -->
+        @push('scripts')
     <script>
         (function(){
-            const table = document.querySelector('table');
+            const tableBody = document.querySelector('table tbody');
             const modal = document.getElementById('vendor-order-modal');
             const closeTop = document.getElementById('vo-close-top');
             const closeBtn = document.getElementById('vo-close');
             const acceptBtn = document.getElementById('vo-accept');
             const rejectBtn = document.getElementById('vo-reject');
             let currentOrderId = null;
+
+            // Real-time listener
+            if(window.Echo){
+                window.Echo.channel('vendor.{{ Auth::id() }}')
+                    .listen('.order.created', (e) => {
+                        console.log('New Order Received:', e.order);
+                        
+                        // Play sound
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                        audio.play().catch(e=>console.log(e));
+
+                        // Show toast/alert
+                        const toast = document.createElement('div');
+                        toast.className = 'fixed top-4 right-4 bg-blue-600 text-white px-6 py-4 rounded-lg shadow-xl z-50 animate-bounce cursor-pointer';
+                        toast.innerHTML = `
+                            <div class="font-bold text-lg">Pesanan Baru!</div>
+                            <div>${e.order.product_name} (${e.order.quantity} unit)</div>
+                            <div class="text-xs mt-1">Klik untuk refresh</div>
+                        `;
+                        toast.onclick = () => location.reload();
+                        document.body.appendChild(toast);
+                        setTimeout(() => toast.remove(), 5000);
+
+                        // Update Stats (Simple increment)
+                        const totalEl = document.querySelector('.text-3xl.font-bold.text-neutral-900'); // First one is Total
+                        if(totalEl) totalEl.textContent = parseInt(totalEl.textContent) + 1;
+                        
+                        const newEl = document.querySelector('.text-3xl.font-bold.text-blue-600'); // New Orders
+                        if(newEl) newEl.textContent = parseInt(newEl.textContent) + 1;
+
+                        // Prepend to table
+                        if(tableBody){
+                            const row = document.createElement('tr');
+                            row.className = 'border-t bg-blue-50 transition-colors duration-1000';
+                            row.innerHTML = `
+                                <td class="py-3 px-4 font-bold text-blue-700">${e.order.order_number}</td>
+                                <td class="py-3 px-4">${new Date().toLocaleDateString('id-ID')}</td>
+                                <td class="py-3 px-4">${e.order.vendor_name || '-'}</td>
+                                <td class="py-3 px-4">${e.order.product_name}</td>
+                                <td class="py-3 px-4">${e.order.quantity}</td>
+                                <td class="py-3 px-4">Rp ${Number(e.order.total_price).toLocaleString('id-ID')}</td>
+                                <td class="py-3 px-4"><span class="inline-block px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-700">pending</span></td>
+                                <td class="py-3 px-4">
+                                    <button class="inline-flex items-center justify-center w-9 h-9 border rounded-md text-neutral-600 btn-order-detail" data-id="${e.order.id}" title="Lihat Detail">👁</button>
+                                </td>
+                            `;
+                            // If empty row exists, remove it
+                            if(tableBody.children[0] && tableBody.children[0].textContent.includes('Belum ada pesanan')) tableBody.innerHTML = '';
+                            tableBody.insertBefore(row, tableBody.firstChild);
+                            
+                            // Highlight effect
+                            setTimeout(() => row.classList.remove('bg-blue-50'), 3000);
+                        }
+                    });
+            }
 
             function openModal(){ modal.classList.remove('hidden'); modal.classList.add('flex'); }
             function closeModal(){ modal.classList.add('hidden'); modal.classList.remove('flex'); }
@@ -264,6 +326,7 @@
             }
 
             // delegate clicks on table for buttons
+            const table = document.querySelector('table');
             if(table) {
                 table.addEventListener('click', function(e){
                     const btn = e.target.closest('.btn-order-detail');
@@ -308,4 +371,5 @@
             }
         })();
     </script>
+    @endpush
 </x-app-layout>
