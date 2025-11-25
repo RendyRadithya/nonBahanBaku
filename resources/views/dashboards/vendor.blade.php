@@ -127,11 +127,9 @@
 
                         <select name="status" id="vendor-status" class="border rounded-md px-3 py-2 text-sm">
                             <option value="">Semua Status</option>
-                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
                             <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Dikonfirmasi</option>
-                            <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>Sedang Diproses</option>
-                            <option value="shipped" {{ request('status') === 'shipped' ? 'selected' : '' }}>Dikirim</option>
-                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Selesai</option>
+                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
                         </select>
                     </form>
                 </div>
