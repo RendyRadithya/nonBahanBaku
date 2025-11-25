@@ -12,34 +12,67 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('/dashboard', function () {
     $user = Auth::user();
-    
+
+    // Read filter params from querystring
+    $q = request('q');
+    $status = request('status');
+
     if ($user->role === 'manager_stock') {
         // Data for Manager Stock Dashboard
-        $orders = Order::latest()->get();
+        $ordersQuery = Order::query();
+
+        if ($q) {
+            $ordersQuery->where(function($sub) use ($q) {
+                $sub->where('order_number', 'like', "%{$q}%")
+                    ->orWhere('product_name', 'like', "%{$q}%")
+                    ->orWhere('vendor_name', 'like', "%{$q}%");
+            });
+        }
+
+        if ($status) {
+            $ordersQuery->where('status', $status);
+        }
+
+        $orders = $ordersQuery->latest()->get();
+
         $totalOrders = Order::count();
         $pendingOrders = Order::where('status', 'pending')->count();
         $inProgressOrders = Order::whereIn('status', ['in_progress', 'shipped'])->count();
         $completedOrders = Order::where('status', 'completed')->count();
-        
+
         return view('dashboards.manager-stock', compact(
             'orders', 
             'totalOrders', 
             'pendingOrders', 
             'inProgressOrders', 
             'completedOrders'
-        ));
-    } 
-    
-    
+        ))->with(['q' => $q, 'status' => $status]);
+    }
+
+
     if ($user->role === 'vendor') {
         // Data for Vendor Dashboard
-        $orders = Order::where('vendor_id', $user->id)->latest()->get();
+        $ordersQuery = Order::where('vendor_id', $user->id);
+
+        if ($q) {
+            $ordersQuery->where(function($sub) use ($q) {
+                $sub->where('order_number', 'like', "%{$q}%")
+                    ->orWhere('product_name', 'like', "%{$q}%")
+                    ->orWhere('user_id', 'like', "%{$q}%");
+            });
+        }
+
+        if ($status) {
+            $ordersQuery->where('status', $status);
+        }
+
+        $orders = $ordersQuery->latest()->get();
         $totalOrders = $orders->count();
         $newOrders = $orders->where('status', 'pending')->count();
         $inProgress = $orders->whereIn('status', ['confirmed', 'in_progress'])->count();
         $completed = $orders->whereIn('status', ['completed', 'shipped'])->count();
         $totalSales = $orders->whereIn('status', ['completed', 'shipped'])->sum('total_price');
-        
+
         return view('dashboards.vendor', compact(
             'orders',
             'totalOrders',
@@ -47,7 +80,7 @@ Route::get('/dashboard', function () {
             'inProgress',
             'completed',
             'totalSales'
-        ));
+        ))->with(['q' => $q, 'status' => $status]);
     }
 
     if ($user->role === 'admin') {

@@ -117,16 +117,23 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <input type="text" placeholder="Cari pesanan..." class="pl-10 pr-3 py-2 border rounded-md w-64 text-sm" />
-                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                    <form id="vendor-filters" method="GET" action="{{ route('dashboard') }}" class="flex items-center gap-3">
+                        <div class="relative">
+                            <input type="text" name="q" id="vendor-q" value="{{ request('q') }}" placeholder="Cari pesanan..." class="pl-10 pr-3 py-2 border rounded-md w-64 text-sm" />
+                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                            </div>
                         </div>
-                    </div>
 
-                    <select class="border rounded-md px-3 py-2 text-sm">
-                        <option>Semua Status</option>
-                    </select>
+                        <select name="status" id="vendor-status" class="border rounded-md px-3 py-2 text-sm">
+                            <option value="">Semua Status</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
+                            <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Dikonfirmasi</option>
+                            <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>Sedang Diproses</option>
+                            <option value="shipped" {{ request('status') === 'shipped' ? 'selected' : '' }}>Dikirim</option>
+                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Selesai</option>
+                        </select>
+                    </form>
                 </div>
             </div>
 
@@ -385,6 +392,28 @@
                     console.error(err); 
                     alert('Terjadi kesalahan saat menghubungi server'); 
                 }
+            }
+        })();
+    </script>
+    @endpush
+    @push('scripts')
+    <script>
+        (function(){
+            const form = document.getElementById('vendor-filters');
+            const qInput = document.getElementById('vendor-q');
+            const status = document.getElementById('vendor-status');
+            // submit when status changes
+            if(status){ status.addEventListener('change', ()=> form.submit()); }
+
+            // debounce for typing
+            let t;
+            if(qInput){
+                qInput.addEventListener('input', function(e){
+                    clearTimeout(t);
+                    t = setTimeout(()=> form.submit(), 500);
+                });
+                // allow Enter to submit immediately
+                qInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); form.submit(); } });
             }
         })();
     </script>
