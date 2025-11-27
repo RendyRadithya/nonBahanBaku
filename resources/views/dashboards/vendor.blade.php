@@ -11,6 +11,18 @@
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <style>
+            /* Ensure a visible blinking animation for the small status dot */
+            @keyframes blink-dot {
+                0% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.2; transform: scale(0.9); }
+                100% { opacity: 1; transform: scale(1); }
+            }
+            .dot-blink {
+                display: inline-block;
+                animation: blink-dot 1s ease-in-out infinite;
+            }
+        </style>
         <!-- Title -->
         <div class="mb-6 flex justify-between items-center">
             <div>
@@ -161,13 +173,48 @@
                                 <td class="py-3 px-4">
                                     @php
                                         $s = strtolower($o->status ?? '');
-                                        $badge = 'bg-gray-100 text-gray-700';
-                                        if (str_contains($s,'new') || str_contains($s,'pesan') || str_contains($s,'pending')) $badge = 'bg-blue-100 text-blue-700';
-                                        if (str_contains($s,'proses') || str_contains($s,'process') || str_contains($s,'progress')) $badge = 'bg-purple-100 text-purple-700';
-                                        if (str_contains($s,'kirim') || str_contains($s,'deliv')) $badge = 'bg-orange-100 text-orange-700';
-                                        if (str_contains($s,'selesai') || str_contains($s,'complete')) $badge = 'bg-green-100 text-green-700';
+                                        // Default values
+                                        $badgeClass = 'bg-gray-100 text-gray-700';
+                                        $label = $o->status ?? '-';
+
+                                        switch($s){
+                                            case 'confirmed':
+                                                $badgeClass = 'bg-green-100 text-green-700';
+                                                $label = 'Dikonfirmasi';
+                                                break;
+                                            case 'rejected':
+                                                $badgeClass = 'bg-red-100 text-red-700';
+                                                $label = 'Ditolak';
+                                                break;
+                                            case 'pending':
+                                                $badgeClass = 'bg-yellow-100 text-yellow-800';
+                                                $label = 'Menunggu Konfirmasi';
+                                                break;
+                                            case 'in_progress':
+                                                $badgeClass = 'bg-purple-100 text-purple-700';
+                                                $label = 'Sedang Diproses';
+                                                break;
+                                            case 'shipped':
+                                                $badgeClass = 'bg-orange-100 text-orange-700';
+                                                $label = 'Dikirim';
+                                                break;
+                                            case 'completed':
+                                                $badgeClass = 'bg-green-100 text-green-700';
+                                                $label = 'Selesai';
+                                                break;
+                                            default:
+                                                // leave defaults
+                                                break;
+                                        }
                                     @endphp
-                                    <span class="inline-block px-3 py-1 rounded-full text-xs {{ $badge }}">{{ $o->status ?? '-' }}</span>
+                                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs {{ $badgeClass }}">
+                                        @if($s === 'pending')
+                                            <span class="inline-block mr-2">
+                                                <span class="w-2.5 h-2.5 inline-block rounded-full bg-red-500 dot-blink"></span>
+                                            </span>
+                                        @endif
+                                        {{ $label }}
+                                    </span>
                                 </td>
                                 <td class="py-3 px-4">
                                     <button class="inline-flex items-center justify-center w-9 h-9 border rounded-md text-neutral-600 btn-order-detail" data-id="{{ $o->id }}" title="Lihat Detail">👁</button>

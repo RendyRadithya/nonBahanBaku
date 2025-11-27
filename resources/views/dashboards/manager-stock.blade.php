@@ -1,5 +1,9 @@
 <x-app-layout>
     <div class="max-w-7xl mx-auto px-6 py-6">
+        <style>
+            @keyframes blink-dot {0%{opacity:1;transform:scale(1)}50%{opacity:0.2;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}
+            .dot-blink{display:inline-block;animation:blink-dot 1s ease-in-out infinite}
+        </style>
         <!-- Page Header -->
         <div class="flex items-start justify-between mb-6">
             <div>
@@ -131,8 +135,43 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{{ $order->quantity }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">Rp {{ number_format($order->total_price, 0, ',', '.') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $order->getStatusBadgeColor() }}">
-                                        {{ $order->getStatusLabel() }}
+                                    @php
+                                        $s = strtolower($order->status ?? '');
+                                        $badgeClass = 'bg-gray-100 text-gray-700';
+                                        $label = $order->getStatusLabel();
+                                        // map to Indonesian labels and colors similar to vendor view
+                                        switch($s){
+                                            case 'confirmed':
+                                                $badgeClass = 'bg-green-100 text-green-700';
+                                                $label = 'Dikonfirmasi';
+                                                break;
+                                            case 'rejected':
+                                                $badgeClass = 'bg-red-100 text-red-700';
+                                                $label = 'Ditolak';
+                                                break;
+                                            case 'pending':
+                                                $badgeClass = 'bg-yellow-100 text-yellow-800';
+                                                $label = 'Menunggu Konfirmasi';
+                                                break;
+                                            case 'in_progress':
+                                                $badgeClass = 'bg-purple-100 text-purple-700';
+                                                $label = 'Sedang Diproses';
+                                                break;
+                                            case 'shipped':
+                                                $badgeClass = 'bg-orange-100 text-orange-700';
+                                                $label = 'Dikirim';
+                                                break;
+                                            case 'completed':
+                                                $badgeClass = 'bg-green-100 text-green-700';
+                                                $label = 'Selesai';
+                                                break;
+                                        }
+                                    @endphp
+                                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs {{ $badgeClass }}">
+                                        @if($s === 'pending')
+                                            <span class="inline-block mr-2"><span class="w-2.5 h-2.5 inline-block rounded-full bg-red-500 dot-blink"></span></span>
+                                        @endif
+                                        {{ $label }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
