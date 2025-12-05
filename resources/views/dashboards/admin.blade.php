@@ -142,35 +142,6 @@
             <p class="text-sm text-neutral-500 mt-2">Administrator McOrder System</p>
         </div>
 
-        <!-- Notifications Alert -->
-        @if($unreadNotifications->count() > 0)
-            <div class="mb-8 bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-                <div class="flex items-start gap-3">
-                    <svg class="w-6 h-6 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                    </svg>
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-yellow-900 mb-2">🔔 Notifikasi Baru ({{ $unreadNotifications->count() }})</h3>
-                        <div class="space-y-2">
-                            @foreach($unreadNotifications->take(3) as $notification)
-                                <div class="text-sm text-yellow-800 bg-white rounded p-3 border border-yellow-100">
-                                    <p class="font-medium">{{ $notification->data['message'] ?? 'Notifikasi baru' }}</p>
-                                    <p class="text-xs text-yellow-600 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                                </div>
-                            @endforeach
-                        </div>
-                        @if($unreadNotifications->count() > 3)
-                            <p class="text-xs text-yellow-700 mt-2">+ {{ $unreadNotifications->count() - 3 }} notifikasi lainnya</p>
-                        @endif
-                        <a href="{{ route('admin.approvals') }}" class="inline-block mt-3 text-sm font-semibold text-yellow-700 hover:text-yellow-800">
-                            Lihat Semua Permintaan →
-                        </a>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-
         <!-- Info -->
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -196,18 +167,7 @@
             </div>
         </div>
 
-        <!-- Info -->
-        <div class="bg-purple-50 border border-purple-200 rounded-xl p-6">
-            <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <div>
-                    <h3 class="font-semibold text-purple-900 mb-1">Dashboard Admin Segera Hadir</h3>
-                    <p class="text-sm text-purple-800">Fitur untuk monitoring dan mengelola seluruh sistem McOrder sedang dalam pengembangan.</p>
-                </div>
-            </div>
-        </div>
+
     </main>
 </body>
 </html>
