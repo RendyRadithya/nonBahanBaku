@@ -282,6 +282,13 @@
                                     </svg>
                                 </button>
                             </div>
+                            <!-- Inline Error Message -->
+                            <div id="password-error" class="hidden mt-2 flex items-center gap-2 text-red-600 text-sm">
+                                <svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span id="password-error-text">Password dan Konfirmasi Password tidak sama!</span>
+                            </div>
                         </div>
 
                         <!-- Navigation Buttons -->
@@ -355,12 +362,23 @@
             if (step === 3) {
                 const password = document.getElementById('password');
                 const passwordConfirmation = document.getElementById('password_confirmation');
+                const passwordError = document.getElementById('password-error');
+                const passwordErrorText = document.getElementById('password-error-text');
+                
+                // Hide error first
+                if (passwordError) {
+                    passwordError.classList.add('hidden');
+                }
                 
                 if (password.value && passwordConfirmation.value && password.value !== passwordConfirmation.value) {
                     isValid = false;
                     password.classList.add('border-red-500', 'ring-1', 'ring-red-500');
                     passwordConfirmation.classList.add('border-red-500', 'ring-1', 'ring-red-500');
-                    alert('Password dan Konfirmasi Password tidak sama!');
+                    // Show inline error message
+                    if (passwordError) {
+                        passwordErrorText.textContent = 'Password dan Konfirmasi Password tidak sama!';
+                        passwordError.classList.remove('hidden');
+                    }
                 }
             }
             
@@ -373,8 +391,8 @@
             
             // Validate current step before moving to next
             if (!validateStep(currentStepNum)) {
-                // Show error message
-                alert('Mohon lengkapi semua field yang wajib diisi!');
+                // Error styling is already applied by validateStep
+                // No need for alert - the red border indicates the error
                 return;
             }
             
@@ -434,6 +452,13 @@
             allInputs.forEach(input => {
                 input.addEventListener('input', function() {
                     this.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+                    // Hide password error message when typing in password fields
+                    if (this.id === 'password' || this.id === 'password_confirmation') {
+                        const passwordError = document.getElementById('password-error');
+                        if (passwordError) {
+                            passwordError.classList.add('hidden');
+                        }
+                    }
                 });
             });
 

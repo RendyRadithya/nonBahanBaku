@@ -21,7 +21,7 @@ class AdminController extends Controller
         // Send email notification to user
         $user->notify(new \App\Notifications\UserApprovedNotification());
 
-        return redirect()->back()->with('success', 'User approved successfully. Email notification sent.');
+        return redirect()->back()->with('success', 'User berhasil disetujui! Notifikasi email telah dikirim.');
     }
 
     public function reject($id)
@@ -34,7 +34,7 @@ class AdminController extends Controller
         // Delete user
         $user->delete();
 
-        return redirect()->back()->with('success', 'User registration rejected. Email notification sent and account deleted.');
+        return redirect()->back()->with('rejected', 'User berhasil ditolak dan dihapus dari sistem.');
     }
 
     public function markAllAsRead()
