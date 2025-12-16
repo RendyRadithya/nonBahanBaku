@@ -92,6 +92,132 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Order History Route for Manager Stock
+Route::get('/riwayat-pesanan', function () {
+    $user = Auth::user();
+    
+    if ($user->role !== 'manager_stock') {
+        abort(403, 'Unauthorized');
+    }
+    
+    // Get filter parameters
+    $q = request('q');
+    $status = request('status');
+    $vendor = request('vendor');
+    $dateFrom = request('date_from');
+    $dateTo = request('date_to');
+    
+    // Build query
+    $ordersQuery = Order::query();
+    
+    // Search filter
+    if ($q) {
+        $ordersQuery->where(function($sub) use ($q) {
+            $sub->where('order_number', 'like', "%{$q}%")
+                ->orWhere('product_name', 'like', "%{$q}%")
+                ->orWhere('vendor_name', 'like', "%{$q}%");
+        });
+    }
+    
+    // Status filter
+    if ($status) {
+        $ordersQuery->where('status', $status);
+    }
+    
+    // Vendor filter
+    if ($vendor) {
+        $ordersQuery->where('vendor_name', $vendor);
+    }
+    
+    // Date range filter
+    if ($dateFrom) {
+        $ordersQuery->whereDate('created_at', '>=', $dateFrom);
+    }
+    if ($dateTo) {
+        $ordersQuery->whereDate('created_at', '<=', $dateTo);
+    }
+    
+    // Paginate results
+    $orders = $ordersQuery->latest()->paginate(15)->withQueryString();
+    
+    // Get unique vendors for filter dropdown
+    $vendors = Order::select('vendor_name')->distinct()->orderBy('vendor_name')->pluck('vendor_name');
+    
+    // Statistics
+    $stats = [
+        'total' => Order::count(),
+        'completed' => Order::where('status', 'completed')->count(),
+        'rejected' => Order::where('status', 'rejected')->count(),
+        'total_spent' => Order::whereIn('status', ['completed', 'shipped'])->sum('total_price'),
+    ];
+    
+    return view('dashboards.order-history', compact('orders', 'vendors', 'stats'));
+})->middleware(['auth', 'verified'])->name('order.history');
+
+// Product Catalog Route for Manager Stock
+Route::get('/katalog', function () {
+    $user = Auth::user();
+    
+    if ($user->role !== 'manager_stock') {
+        abort(403, 'Unauthorized');
+    }
+    
+    // Get filter parameters
+    $q = request('q');
+    $vendor = request('vendor');
+    $minPrice = request('min_price');
+    $maxPrice = request('max_price');
+    $inStock = request('in_stock');
+    
+    // Build query
+    $productsQuery = \App\Models\Product::with('vendor');
+    
+    // Search filter
+    if ($q) {
+        $productsQuery->where(function($sub) use ($q) {
+            $sub->where('name', 'like', "%{$q}%")
+                ->orWhere('description', 'like', "%{$q}%");
+        });
+    }
+    
+    // Vendor filter
+    if ($vendor) {
+        $productsQuery->where('vendor_id', $vendor);
+    }
+    
+    // Price range filter
+    if ($minPrice) {
+        $productsQuery->where('price', '>=', $minPrice);
+    }
+    if ($maxPrice) {
+        $productsQuery->where('price', '<=', $maxPrice);
+    }
+    
+    // In stock filter
+    if ($inStock) {
+        $productsQuery->where('stock', '>', 0);
+    }
+    
+    // Paginate results
+    $products = $productsQuery->latest()->paginate(12)->withQueryString();
+    
+    // Get all vendors for filter dropdown
+    $vendors = \App\Models\User::where('role', 'vendor')
+        ->where('is_approved', true)
+        ->orderBy('store_name')
+        ->get(['id', 'name', 'store_name']);
+    
+    // Statistics
+    $stats = [
+        'total_products' => \App\Models\Product::count(),
+        'total_vendors' => \App\Models\User::where('role', 'vendor')->where('is_approved', true)->count(),
+        'in_stock' => \App\Models\Product::where('stock', '>', 0)->count(),
+        'out_of_stock' => \App\Models\Product::where('stock', '<=', 0)->count(),
+    ];
+    
+    return view('dashboards.catalog', compact('products', 'vendors', 'stats'));
+})->middleware(['auth', 'verified'])->name('catalog');
+
 
 use Illuminate\Http\Request;
 use App\Events\OrderCreated;

@@ -27,15 +27,33 @@
                         <!-- Logo & Dashboard -->
                         <div class="flex items-center gap-4">
                             <div class="flex items-center">
-                                <a href="{{ route('dashboard') }}" class="flex items-center relative">
+                                <a href="{{ route('dashboard') }}" class="flex items-center">
                                     <img src="{{ asset('images/Logo MCorder.png') }}" alt="McOrder" class="h-10 w-auto" />
-
-                                    <div class="flex items-center ml-6 relative h-16">
-                                        <span class="text-red-600 font-semibold text-base">Dashboard</span>
-                                        <!-- Red underline -->
-                                        <span class="absolute left-0 bottom-0 w-28 h-1 bg-red-600 rounded-sm"></span>
-                                    </div>
                                 </a>
+
+                                <!-- Navigation Menu -->
+                                <nav class="flex items-center ml-8 h-16 gap-1">
+                                    <a href="{{ route('dashboard') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('dashboard') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
+                                        <span>Dashboard</span>
+                                        @if(request()->routeIs('dashboard'))
+                                            <span class="absolute left-0 bottom-0 w-full h-1 bg-red-600 rounded-t-sm"></span>
+                                        @endif
+                                    </a>
+                                    @if(Auth::user()->role === 'manager_stock')
+                                    <a href="{{ route('order.history') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('order.history') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
+                                        <span>Riwayat Pesanan</span>
+                                        @if(request()->routeIs('order.history'))
+                                            <span class="absolute left-0 bottom-0 w-full h-1 bg-red-600 rounded-t-sm"></span>
+                                        @endif
+                                    </a>
+                                    <a href="{{ route('catalog') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('catalog') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
+                                        <span>Katalog Produk</span>
+                                        @if(request()->routeIs('catalog'))
+                                            <span class="absolute left-0 bottom-0 w-full h-1 bg-red-600 rounded-t-sm"></span>
+                                        @endif
+                                    </a>
+                                    @endif
+                                </nav>
                             </div>
                         </div>
 
