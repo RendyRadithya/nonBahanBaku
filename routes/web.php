@@ -218,6 +218,96 @@ Route::get('/katalog', function () {
     return view('dashboards.catalog', compact('products', 'vendors', 'stats'));
 })->middleware(['auth', 'verified'])->name('catalog');
 
+// Reports & Analytics Route for Manager Stock
+Route::get('/laporan', function () {
+    $user = Auth::user();
+    
+    if ($user->role !== 'manager_stock') {
+        abort(403, 'Unauthorized');
+    }
+    
+    // Get year filter (default current year)
+    $year = request('year', date('Y'));
+    $month = request('month');
+    
+    // Monthly spending data for chart
+    $monthlySpending = [];
+    for ($m = 1; $m <= 12; $m++) {
+        $spending = Order::whereYear('created_at', $year)
+            ->whereMonth('created_at', $m)
+            ->whereIn('status', ['completed', 'shipped', 'confirmed'])
+            ->sum('total_price');
+        $monthlySpending[] = $spending;
+    }
+    
+    // Monthly order count
+    $monthlyOrders = [];
+    for ($m = 1; $m <= 12; $m++) {
+        $count = Order::whereYear('created_at', $year)
+            ->whereMonth('created_at', $m)
+            ->count();
+        $monthlyOrders[] = $count;
+    }
+    
+    // Top products (most ordered)
+    $topProducts = Order::select('product_name', \DB::raw('SUM(quantity) as total_qty'), \DB::raw('SUM(total_price) as total_spent'))
+        ->whereYear('created_at', $year)
+        ->when($month, fn($q) => $q->whereMonth('created_at', $month))
+        ->groupBy('product_name')
+        ->orderByDesc('total_qty')
+        ->limit(10)
+        ->get();
+    
+    // Top vendors by spending
+    $topVendors = Order::select('vendor_name', \DB::raw('COUNT(*) as total_orders'), \DB::raw('SUM(total_price) as total_spent'))
+        ->whereYear('created_at', $year)
+        ->when($month, fn($q) => $q->whereMonth('created_at', $month))
+        ->whereIn('status', ['completed', 'shipped', 'confirmed'])
+        ->groupBy('vendor_name')
+        ->orderByDesc('total_spent')
+        ->limit(10)
+        ->get();
+    
+    // Order status distribution
+    $statusDistribution = Order::select('status', \DB::raw('COUNT(*) as count'))
+        ->whereYear('created_at', $year)
+        ->when($month, fn($q) => $q->whereMonth('created_at', $month))
+        ->groupBy('status')
+        ->get()
+        ->pluck('count', 'status')
+        ->toArray();
+    
+    // Overall statistics
+    $stats = [
+        'total_orders' => Order::whereYear('created_at', $year)->when($month, fn($q) => $q->whereMonth('created_at', $month))->count(),
+        'total_spent' => Order::whereYear('created_at', $year)->when($month, fn($q) => $q->whereMonth('created_at', $month))->whereIn('status', ['completed', 'shipped', 'confirmed'])->sum('total_price'),
+        'completed_orders' => Order::whereYear('created_at', $year)->when($month, fn($q) => $q->whereMonth('created_at', $month))->where('status', 'completed')->count(),
+        'avg_order_value' => Order::whereYear('created_at', $year)->when($month, fn($q) => $q->whereMonth('created_at', $month))->whereIn('status', ['completed', 'shipped', 'confirmed'])->avg('total_price') ?? 0,
+    ];
+    
+    // Available years for filter
+    $availableYears = Order::selectRaw('YEAR(created_at) as year')
+        ->distinct()
+        ->orderByDesc('year')
+        ->pluck('year');
+    
+    if ($availableYears->isEmpty()) {
+        $availableYears = collect([date('Y')]);
+    }
+    
+    return view('dashboards.reports', compact(
+        'monthlySpending', 
+        'monthlyOrders', 
+        'topProducts', 
+        'topVendors', 
+        'statusDistribution', 
+        'stats', 
+        'year', 
+        'month',
+        'availableYears'
+    ));
+})->middleware(['auth', 'verified'])->name('reports');
+
 
 use Illuminate\Http\Request;
 use App\Events\OrderCreated;

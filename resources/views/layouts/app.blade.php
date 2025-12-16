@@ -32,7 +32,7 @@
                                 </a>
 
                                 <!-- Navigation Menu -->
-                                <nav class="flex items-center ml-8 h-16 gap-1">
+                                <nav class="flex items-center ml-12 h-16 gap-1">
                                     <a href="{{ route('dashboard') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('dashboard') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
                                         <span>Dashboard</span>
                                         @if(request()->routeIs('dashboard'))
@@ -40,15 +40,21 @@
                                         @endif
                                     </a>
                                     @if(Auth::user()->role === 'manager_stock')
-                                    <a href="{{ route('order.history') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('order.history') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
-                                        <span>Riwayat Pesanan</span>
-                                        @if(request()->routeIs('order.history'))
-                                            <span class="absolute left-0 bottom-0 w-full h-1 bg-red-600 rounded-t-sm"></span>
-                                        @endif
-                                    </a>
                                     <a href="{{ route('catalog') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('catalog') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
                                         <span>Katalog Produk</span>
                                         @if(request()->routeIs('catalog'))
+                                            <span class="absolute left-0 bottom-0 w-full h-1 bg-red-600 rounded-t-sm"></span>
+                                        @endif
+                                    </a>
+                                    <a href="{{ route('reports') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('reports') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
+                                        <span>Laporan</span>
+                                        @if(request()->routeIs('reports'))
+                                            <span class="absolute left-0 bottom-0 w-full h-1 bg-red-600 rounded-t-sm"></span>
+                                        @endif
+                                    </a>
+                                    <a href="{{ route('order.history') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('order.history') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
+                                        <span>Riwayat Pesanan</span>
+                                        @if(request()->routeIs('order.history'))
                                             <span class="absolute left-0 bottom-0 w-full h-1 bg-red-600 rounded-t-sm"></span>
                                         @endif
                                     </a>
