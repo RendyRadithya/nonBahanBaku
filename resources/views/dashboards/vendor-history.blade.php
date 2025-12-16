@@ -111,12 +111,6 @@
                         Cari
                     </button>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">&nbsp;</label>
-                    <a href="{{ route('vendor.history') }}" class="block px-5 py-2.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-medium text-center">
-                        Reset
-                    </a>
-                </div>
             </form>
         </div>
 
