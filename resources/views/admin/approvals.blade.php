@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Persetujuan User - Admin McOrder</title>
+    <title>McOrder</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/Logo MCorder.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @keyframes slide-in {
@@ -42,7 +43,7 @@
                 <!-- Logo -->
                 <div class="flex items-center gap-3">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-yellow-400 text-red-600 font-bold text-lg">M</span>
+                        <img src="{{ asset('images/Logo MCorder.png') }}" alt="McOrder Logo" class="h-10 w-10 object-contain">
                         <div class="flex flex-col">
                             <span class="text-lg font-bold text-neutral-900">McOrder</span>
                             <span class="text-xs text-neutral-500 -mt-1">Admin Panel</span>
