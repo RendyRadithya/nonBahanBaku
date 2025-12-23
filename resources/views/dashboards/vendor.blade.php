@@ -37,7 +37,7 @@
 
         <!-- Stat Cards: equal-width responsive row without horizontal scroll -->
         <div class="mb-8">
-            <div class="flex gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <!-- card -->
                 <div class="flex-1 min-w-0 bg-white rounded-xl p-5 h-44 flex flex-col justify-between transition-transform transform hover:-translate-y-1 hover:shadow-lg duration-200 ease-out">
                     <div class="flex justify-between items-center">
@@ -129,15 +129,15 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <form id="vendor-filters" method="GET" action="{{ route('dashboard') }}" class="flex items-center gap-3">
-                        <div class="relative">
-                            <input type="text" name="q" id="vendor-q" value="{{ request('q') }}" placeholder="Cari pesanan..." class="pl-10 pr-3 py-2 border rounded-md w-64 text-sm" />
-                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                    <form id="vendor-filters" method="GET" action="{{ route('dashboard') }}" class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                        <div class="relative flex-1 min-w-0 w-full">
+                            <input type="text" name="q" id="vendor-q" value="{{ request('q') }}" placeholder="Cari pesanan..." class="pl-10 pr-3 py-2 border rounded-md w-full sm:w-64 text-sm" />
+                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none bg-transparent p-0 m-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                             </div>
                         </div>
 
-                        <select name="status" id="vendor-status" class="border rounded-md px-3 py-2 text-sm">
+                        <select name="status" id="vendor-status" class="border rounded-md px-3 py-2 text-sm w-full sm:w-auto">
                             <option value="">Semua Status</option>
                             <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Dikonfirmasi</option>
                             <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
@@ -147,8 +147,8 @@
                 </div>
             </div>
 
-            <div class="overflow-auto">
-                <table class="w-full text-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-max w-full text-sm">
                     <thead class="text-left text-neutral-500">
                         <tr>
                             <th class="py-3 px-4">No. Pesanan</th>

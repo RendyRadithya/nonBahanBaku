@@ -31,8 +31,8 @@
                                     <img src="{{ asset('images/Logo MCorder.png') }}" alt="McOrder" class="h-10 w-auto" />
                                 </a>
 
-                                <!-- Navigation Menu -->
-                                <nav class="flex items-center ml-12 h-16 gap-1">
+                                <!-- Navigation Menu (desktop) -->
+                                <nav class="hidden md:flex items-center ml-6 h-16 gap-1">
                                     <a href="{{ route('dashboard') }}" class="relative h-16 flex items-center px-4 {{ request()->routeIs('dashboard') ? 'text-red-600 font-semibold' : 'text-neutral-600 hover:text-neutral-900' }} transition">
                                         <span>Dashboard</span>
                                         @if(request()->routeIs('dashboard'))
@@ -74,6 +74,15 @@
                                     </a>
                                     @endif
                                 </nav>
+
+                                <!-- Mobile menu button -->
+                                <div class="md:hidden ml-3">
+                                    <button id="mobile-menu-button" aria-expanded="false" aria-controls="mobile-menu" class="p-2 rounded-md hover:bg-neutral-100 focus:outline-none" onclick="toggleMobileMenu()">
+                                        <svg class="h-6 w-6 text-neutral-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -83,7 +92,7 @@
 
                             <div class="relative">
                                 <button id="user-menu-button" type="button" class="flex items-center gap-3 focus:outline-none" onclick="toggleUserMenu(event)">
-                                <div class="text-right mr-2 max-w-xs">
+                                <div class="text-right mr-2 max-w-xs hidden sm:block">
                                     <div class="font-medium text-neutral-900 truncate">{{ Auth::user()->name }}</div>
                                     <div class="text-xs text-neutral-500 truncate">{{ ucfirst(str_replace('_', ' ', Auth::user()->role)) }}</div>
                                 </div>
@@ -133,6 +142,21 @@
                         </div>
                     </div>
                 </div>
+                <!-- Mobile navigation (hidden by default) -->
+                <div id="mobile-menu" class="md:hidden hidden border-t border-neutral-100">
+                    <div class="px-4 py-3 space-y-1">
+                        <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('dashboard') ? 'text-red-600 font-semibold bg-neutral-50' : 'text-neutral-700 hover:bg-neutral-50' }}">Dashboard</a>
+                        @if(Auth::user()->role === 'manager_stock')
+                            <a href="{{ route('catalog') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('catalog') ? 'text-red-600 font-semibold bg-neutral-50' : 'text-neutral-700 hover:bg-neutral-50' }}">Katalog Produk</a>
+                            <a href="{{ route('reports') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('reports') ? 'text-red-600 font-semibold bg-neutral-50' : 'text-neutral-700 hover:bg-neutral-50' }}">Laporan</a>
+                            <a href="{{ route('order.history') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('order.history') ? 'text-red-600 font-semibold bg-neutral-50' : 'text-neutral-700 hover:bg-neutral-50' }}">Riwayat Pesanan</a>
+                        @endif
+                        @if(Auth::user()->role === 'vendor')
+                            <a href="{{ route('vendor.reports') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('vendor.reports') ? 'text-red-600 font-semibold bg-neutral-50' : 'text-neutral-700 hover:bg-neutral-50' }}">Laporan Penjualan</a>
+                            <a href="{{ route('vendor.history') }}" class="block px-3 py-2 rounded-md {{ request()->routeIs('vendor.history') ? 'text-red-600 font-semibold bg-neutral-50' : 'text-neutral-700 hover:bg-neutral-50' }}">Riwayat Pesanan</a>
+                        @endif
+                    </div>
+                </div>
             </header>
 
             <!-- Page Heading (Optional) -->
@@ -156,6 +180,20 @@
 
         <!-- User Menu Toggle Script -->
         <script>
+            function toggleMobileMenu() {
+                const menu = document.getElementById('mobile-menu');
+                const btn = document.getElementById('mobile-menu-button');
+                if (!menu) return;
+                const isHidden = menu.classList.contains('hidden');
+                if (isHidden) {
+                    menu.classList.remove('hidden');
+                    if (btn) btn.setAttribute('aria-expanded', 'true');
+                } else {
+                    menu.classList.add('hidden');
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                }
+            }
+
             function toggleUserMenu(e) {
                 e.stopPropagation();
                 const menu = document.getElementById('user-menu');

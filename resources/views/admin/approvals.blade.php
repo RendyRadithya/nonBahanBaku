@@ -37,33 +37,70 @@
 </head>
 <body class="bg-neutral-50 min-h-screen">
     <!-- Header -->
-    <header class="bg-white border-b border-neutral-200 shadow-sm">
+    <header class="bg-white border-b border-neutral-200">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex h-16 items-center justify-between">
+            <div class="flex items-center justify-between h-16">
                 <!-- Logo -->
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-                        <img src="{{ asset('images/Logo MCorder.png') }}" alt="McOrder Logo" class="h-10 w-10 object-contain">
-                        <div class="flex flex-col">
-                            <span class="text-lg font-bold text-neutral-900">McOrder</span>
-                            <span class="text-xs text-neutral-500 -mt-1">Admin Panel</span>
-                        </div>
+                    <a href="{{ route('dashboard') }}" class="flex items-center">
+                        <img src="{{ asset('images/Logo MCorder.png') }}" alt="McOrder Logo" class="h-10 w-auto">
                     </a>
                 </div>
                 
-                <!-- User Info & Logout -->
+                <!-- Notifications + User Menu (match layouts/app.blade.php) -->
                 <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <div class="text-sm font-semibold text-neutral-900">{{ Auth::user()->name }}</div>
-                        <div class="text-xs text-neutral-500">Administrator</div>
+                    @include('components.notifications')
+
+                    <div class="relative">
+                        <button id="user-menu-button" type="button" class="flex items-center gap-3 focus:outline-none" onclick="toggleUserMenu(event)">
+                        <div class="text-right mr-2 max-w-xs hidden sm:block">
+                            <div class="font-medium text-neutral-900 truncate">{{ Auth::user()->name }}</div>
+                            <div class="text-xs text-neutral-500 truncate">{{ ucfirst(str_replace('_', ' ', Auth::user()->role)) }}</div>
+                        </div>
+                        @if(Auth::user()->profile_photo)
+                            <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="Profile" class="h-10 w-10 rounded-full object-cover border-2 border-gray-200">
+                        @else
+                            <div class="h-10 w-10 rounded-full bg-red-600 text-white flex items-center justify-center font-semibold">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            </div>
+                        @endif
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="user-menu" class="hidden absolute right-0 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50" style="top: calc(100% + 8px);">
+                        <!-- Header -->
+                        <div class="px-4 py-3 border-b">
+                            <div class="text-sm font-semibold text-neutral-900">{{ Auth::user()->name }}</div>
+                            <div class="text-xs text-neutral-500 mt-0.5">
+                                {{ ucfirst(str_replace('_', ' ', Auth::user()->role)) }}
+                                @if(Auth::user()->store_name)
+                                    <span class="block text-xs text-neutral-400">{{ Auth::user()->store_name }}</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Menu Items -->
+                        <div class="py-1">
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span>Profile</span>
+                            </a>
+
+                            <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-neutral-100" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                                </svg>
+                                <span class="font-medium">Logout</span>
+                            </a>
+
+                            <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
+                                @csrf
+                            </form>
+                        </div>
                     </div>
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition">
-                            <span>🚪</span>
-                            Logout
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -71,7 +108,7 @@
 
     <!-- Main Content -->
     <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div class="mb-6 flex items-center justify-between">
+        <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <h1 class="text-2xl font-bold text-neutral-900">Permintaan Registrasi User</h1>
             <a href="{{ route('dashboard') }}" class="text-sm text-neutral-600 hover:text-neutral-900">← Kembali ke Dashboard</a>
         </div>
@@ -118,9 +155,10 @@
             </div>
         @endif
 
-        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200">
             @if($pendingUsers->count() > 0)
-                <table class="min-w-full divide-y divide-neutral-200">
+                <div class="overflow-x-auto">
+                <table class="min-w-max w-full divide-y divide-neutral-200">
                     <thead class="bg-neutral-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Nama</th>
@@ -177,6 +215,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             @else
                 <div class="p-12 text-center">
                     <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -268,6 +307,26 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeRejectModal();
+            }
+        });
+
+        // User menu toggle (match layouts/app.blade.php)
+        function toggleUserMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('user-menu');
+            if (!menu) return;
+            menu.classList.toggle('hidden');
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', function (ev) {
+            const menu = document.getElementById('user-menu');
+            if (!menu) return;
+            if (!menu.classList.contains('hidden')) {
+                const btn = document.getElementById('user-menu-button');
+                if (btn && !btn.contains(ev.target) && !menu.contains(ev.target)) {
+                    menu.classList.add('hidden');
+                }
             }
         });
     </script>

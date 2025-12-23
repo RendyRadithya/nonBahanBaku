@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="max-w-7xl mx-auto px-6 py-6">
         <!-- Page Header -->
-        <div class="flex items-start justify-between mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
                 <h1 class="text-2xl font-semibold text-neutral-900">Riwayat Pesanan</h1>
                 <p class="text-sm text-neutral-600 mt-1">Lihat dan kelola semua riwayat pesanan bahan baku</p>
@@ -9,7 +9,7 @@
 
             <!-- Export Button -->
             <div class="flex items-center gap-3">
-                <a href="{{ route('order.history.export', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
+                <a href="{{ route('order.history.export', request()->query()) }}" class="mt-4 sm:mt-0 inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 text-sm bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition whitespace-nowrap">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
@@ -81,15 +81,18 @@
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 mb-6">
             <div class="p-6">
                 <h3 class="text-sm font-semibold text-neutral-700 mb-4">Filter Pesanan</h3>
-                <form method="GET" action="{{ route('order.history') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <!-- Search -->
+                <form method="GET" action="{{ route('order.history') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <!-- Search + Reset -->
                     <div class="md:col-span-2">
                         <label class="block text-xs text-neutral-500 mb-1">Cari Pesanan</label>
-                        <div class="relative">
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            <input type="text" name="q" value="{{ request('q') }}" placeholder="No. pesanan, produk, vendor..." class="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                <input type="text" name="q" value="{{ request('q') }}" placeholder="No. pesanan, produk, vendor..." class="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+                            <a href="{{ route('order.history') }}" class="px-3 py-2 bg-neutral-200 text-neutral-700 rounded-lg text-sm hover:bg-neutral-300 transition">Reset</a>
                         </div>
                     </div>
 
@@ -118,28 +121,23 @@
                         </select>
                     </div>
 
-                    <!-- Date Range -->
-                    <div class="flex items-end gap-2">
-                        <div class="flex-1">
-                            <label class="block text-xs text-neutral-500 mb-1">Dari Tanggal</label>
-                            <input type="date" name="date_from" value="{{ request('date_from') }}" min="{{ date('Y-m-d') }}" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                        </div>
+                    <!-- Date From -->
+                    <div class="md:col-span-1">
+                        <label class="block text-xs text-neutral-500 mb-1">Dari Tanggal</label>
+                        <input type="date" name="date_from" value="{{ request('date_from') }}" min="{{ date('Y-m-d') }}" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Date To -->
+                    <div class="md:col-span-1">
+                        <label class="block text-xs text-neutral-500 mb-1">Sampai Tanggal</label>
+                        <input type="date" name="date_to" value="{{ request('date_to') }}" min="{{ date('Y-m-d') }}" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
                     </div>
 
                     <!-- Filter Actions -->
-                    <div class="md:col-span-5 flex items-center gap-3 pt-2">
-                        <div class="flex-1">
-                            <label class="block text-xs text-neutral-500 mb-1">Sampai Tanggal</label>
-                            <input type="date" name="date_to" value="{{ request('date_to') }}" min="{{ date('Y-m-d') }}" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                        </div>
-                        <div class="flex items-end gap-2 pt-5">
-                            <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
-                                Filter
-                            </button>
-                            <a href="{{ route('order.history') }}" class="px-6 py-2 bg-neutral-200 text-neutral-700 rounded-lg font-semibold hover:bg-neutral-300 transition">
-                                Reset
-                            </a>
-                        </div>
+                    <div class="md:col-span-6 flex items-center justify-end gap-2">
+                        <button type="submit" class="w-full md:w-auto px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
+                            Filter
+                        </button>
                     </div>
                 </form>
             </div>
@@ -153,7 +151,7 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="min-w-max w-full">
                     <thead class="bg-neutral-50 border-b border-neutral-200">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">No. Pesanan</th>

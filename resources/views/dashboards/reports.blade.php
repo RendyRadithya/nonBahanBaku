@@ -1,29 +1,37 @@
 <x-app-layout>
     <div class="max-w-7xl mx-auto px-6 py-6">
-        <!-- Page Header -->
-        <div class="flex items-start justify-between mb-6">
+        <!-- Page Header + Filters (responsive) -->
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-semibold text-neutral-900">Laporan & Grafik</h1>
                 <p class="text-sm text-neutral-600 mt-1">Analisis pengeluaran dan performa pesanan</p>
             </div>
 
-            <!-- Filter -->
-            <form method="GET" action="{{ route('reports') }}" class="flex items-center gap-3">
-                <select name="year" onchange="this.form.submit()" class="pl-4 pr-10 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none bg-white bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg%20xmlns%3d%22http%3a%2f%2fwww.w3.org%2f2000%2fsvg%22%20fill%3d%22none%22%20viewBox%3d%220%200%2024%2024%22%20stroke%3d%22%23666%22%3e%3cpath%20stroke-linecap%3d%22round%22%20stroke-linejoin%3d%22round%22%20stroke-width%3d%222%22%20d%3d%22M19%209l-7%207-7-7%22%2f%3e%3c%2fsvg%3e')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat">
-                    @foreach($availableYears as $y)
-                        <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                    @endforeach
-                </select>
-                <select name="month" onchange="this.form.submit()" class="pl-4 pr-10 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none bg-white bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg%20xmlns%3d%22http%3a%2f%2fwww.w3.org%2f2000%2fsvg%22%20fill%3d%22none%22%20viewBox%3d%220%200%2024%2024%22%20stroke%3d%22%23666%22%3e%3cpath%20stroke-linecap%3d%22round%22%20stroke-linejoin%3d%22round%22%20stroke-width%3d%222%22%20d%3d%22M19%209l-7%207-7-7%22%2f%3e%3c%2fsvg%3e')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat">
-                    <option value="">Semua Bulan</option>
-                    @php
-                        $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                    @endphp
-                    @foreach($months as $idx => $m)
-                        <option value="{{ $idx + 1 }}" {{ $month == ($idx + 1) ? 'selected' : '' }}>{{ $m }}</option>
-                    @endforeach
-                </select>
-            </form>
+            <div class="w-full sm:w-auto">
+                <div class="bg-white rounded-xl shadow-sm p-3 sm:p-4">
+                    <form method="GET" action="{{ route('reports') }}" class="flex flex-wrap items-center gap-3">
+                        <div class="w-28">
+                            <select name="year" onchange="this.form.submit()" class="w-full pl-4 pr-10 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none bg-white bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg%20xmlns%3d%22http%3a%2f%2fwww.w3.org%2f2000%2fsvg%22%20fill%3d%22none%22%20viewBox%3d%220%200%2024%2024%22%20stroke%3d%22%23666%22%3e%3cpath%20stroke-linecap%3d%22round%22%20stroke-linejoin%3d%22round%22%20stroke-width%3d%222%22%20d%3d%22M19%209l-7%207-7-7%22%2f%3e%3c%2fsvg%3e')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat">
+                                @foreach($availableYears as $y)
+                                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="w-40">
+                            <select name="month" onchange="this.form.submit()" class="w-full pl-4 pr-10 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none bg-white bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg%20xmlns%3d%22http%3a%2f%2fwww.w3.org%2f2000%2fsvg%22%20fill%3d%22none%22%20viewBox%3d%220%200%2024%2024%22%20stroke%3d%22%23666%22%3e%3cpath%20stroke-linecap%3d%22round%22%20stroke-linejoin%3d%22round%22%20stroke-width%3d%222%22%20d%3d%22M19%209l-7%207-7-7%22%2f%3e%3c%2fsvg%3e')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat">
+                                <option value="">Semua Bulan</option>
+                                @php
+                                    $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                                @endphp
+                                @foreach($months as $idx => $m)
+                                    <option value="{{ $idx + 1 }}" {{ $month == ($idx + 1) ? 'selected' : '' }}>{{ $m }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <!-- Statistics Cards -->
@@ -142,7 +150,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <h3 class="text-lg font-bold text-neutral-900 mb-4">Vendor dengan Pembelian Tertinggi</h3>
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="min-w-max w-full">
                     <thead class="bg-neutral-50 border-b border-neutral-200">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-neutral-600 uppercase">Peringkat</th>

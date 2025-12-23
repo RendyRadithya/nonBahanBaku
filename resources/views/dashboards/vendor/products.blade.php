@@ -27,8 +27,9 @@
             </div>
         @endif
 
-        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <table class="w-full text-sm text-left">
+        <div class="bg-white rounded-xl shadow-sm border">
+            <div class="overflow-x-auto">
+            <table class="min-w-max w-full text-sm text-left">
                 <thead class="bg-neutral-50 text-neutral-500 font-medium border-b">
                     <tr>
                         <th class="px-6 py-4">Nama Produk</th>
@@ -48,7 +49,7 @@
                                     {{ $product->stock }} unit
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-neutral-500 truncate max-w-xs">{{ $product->description ?? '-' }}</td>
+                            <td class="px-6 py-4 text-neutral-500 max-w-xs break-words">{{ $product->description ?? '-' }}</td>
                             <td class="px-6 py-4 text-right flex justify-end gap-2">
                                 <button onclick='openModal("edit", @json($product))' class="text-blue-600 hover:text-blue-800 font-medium">Edit</button>
                                 <form action="{{ route('products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Hapus produk ini?');" class="inline">
@@ -65,6 +66,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 

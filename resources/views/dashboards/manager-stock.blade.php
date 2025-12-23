@@ -11,7 +11,7 @@
                 <p class="text-sm text-neutral-600 mt-1">Kelola dan pantau pesanan bahan baku non-HAVI</p>
             </div>
 
-            <button id="open-create-order" class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
+            <button id="open-create-order" class="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-red-600 text-white rounded-md sm:rounded-lg text-sm sm:text-base font-semibold hover:bg-red-700 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -111,7 +111,7 @@
 
             <!-- Table -->
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="min-w-max w-full">
                     <thead class="bg-neutral-50 border-b border-neutral-200">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-600 uppercase tracking-wider">No. Pesanan</th>

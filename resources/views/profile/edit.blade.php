@@ -26,27 +26,25 @@
 
                             <!-- Centered Photo with Edit Button -->
                             <div class="flex justify-center">
-                                <div class="relative" style="width: 128px; height: 128px;">
+                                <div class="relative w-24 h-24 sm:w-32 sm:h-32">
                                     @if($user->profile_photo)
                                         <!-- Show uploaded photo -->
-                                        <img class="rounded-full object-cover border-4 border-gray-200 shadow-lg" 
+                                        <img class="rounded-full object-cover border-4 border-gray-200 shadow-lg w-24 h-24 sm:w-32 sm:h-32 max-w-full" 
                                              src="{{ asset('storage/' . $user->profile_photo) }}" 
                                              alt="Profile Photo" 
-                                             id="photo-preview"
-                                             style="width: 128px; height: 128px;">
-                                        <div class="rounded-full bg-red-600 items-center justify-center text-white text-4xl font-bold border-4 border-gray-200 shadow-lg hidden" id="photo-placeholder" style="width: 128px; height: 128px;">
+                                             id="photo-preview">
+                                        <div class="rounded-full bg-red-600 items-center justify-center text-white text-3xl sm:text-4xl font-bold border-4 border-gray-200 shadow-lg hidden flex items-center justify-center" id="photo-placeholder">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                     @else
                                         <!-- Show initial placeholder -->
-                                        <div class="rounded-full bg-red-600 flex items-center justify-center text-white text-4xl font-bold border-4 border-gray-200 shadow-lg" id="photo-placeholder" style="width: 128px; height: 128px;">
+                                        <div class="rounded-full bg-red-600 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold border-4 border-gray-200 shadow-lg" id="photo-placeholder">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
-                                        <img class="rounded-full object-cover border-4 border-gray-200 shadow-lg hidden" 
+                                        <img class="rounded-full object-cover border-4 border-gray-200 shadow-lg hidden w-24 h-24 sm:w-32 sm:h-32 max-w-full absolute top-0 left-0" 
                                              src="" 
                                              alt="Profile Photo" 
-                                             id="photo-preview"
-                                             style="width: 128px; height: 128px; position: absolute; top: 0; left: 0;">
+                                             id="photo-preview">
                                     @endif
                                     
                                     <!-- Pencil Edit Button -->

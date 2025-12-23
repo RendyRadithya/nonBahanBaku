@@ -5,19 +5,21 @@
 @section('content')
 <div class="min-h-screen bg-gray-100 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-semibold text-neutral-900">Laporan Penjualan</h1>
-            <p class="text-sm text-neutral-500 mt-1">Analisis performa penjualan Anda</p>
-        </div>
+        <!-- Header + Filters (responsive) -->
+        <div class="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-semibold text-neutral-900">Laporan Penjualan</h1>
+                <p class="text-sm text-neutral-500 mt-1">Analisis pengeluaran dan performa pesanan</p>
+            </div>
 
-        <!-- Filter Section -->
-        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-            <form method="GET" action="{{ route('vendor.reports') }}" class="flex items-end gap-3">
+            <!-- Filters (card) -->
+            <div class="w-full sm:w-auto">
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6">
+                    <form method="GET" action="{{ route('vendor.reports') }}" class="flex flex-wrap items-end gap-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
                     <div class="relative">
-                        <select name="year" class="w-28 pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 appearance-none">
+                        <select name="year" class="w-full sm:w-28 pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 appearance-none">
                             @foreach($availableYears as $y)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endforeach
@@ -32,7 +34,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Bulan</label>
                     <div class="relative">
-                        <select name="month" class="w-40 pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 appearance-none">
+                        <select name="month" class="w-full sm:w-40 pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 appearance-none">
                             <option value="">Semua Bulan</option>
                             @php
                                 $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -48,13 +50,15 @@
                         </div>
                     </div>
                 </div>
-                <div>
+                <div class="w-full sm:w-auto">
                     <label class="block text-sm font-medium text-gray-700 mb-2">&nbsp;</label>
-                    <button type="submit" class="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium">
+                    <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium">
                         Cari
                     </button>
                 </div>
-            </form>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <!-- Statistics Cards -->
@@ -166,7 +170,7 @@
             <h2 class="text-lg font-semibold text-gray-800 mb-4">🏪 Pelanggan Terbaik</h2>
             @if($topCustomers->count() > 0)
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="min-w-max w-full">
                         <thead>
                             <tr class="bg-gray-50">
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Peringkat</th>
