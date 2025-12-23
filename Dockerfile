@@ -22,11 +22,15 @@ COPY composer.json ./
 COPY composer.lock ./
 
 # Install PHP dependencies using PHP 8.2 so platform requirements match
-RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+# Use --no-scripts so composer doesn't try to run artisan before app files are copied
+RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --no-scripts
 
 COPY . .
 COPY --from=node-builder /app/public /app/public
-RUN composer dump-autoload --optimize
+
+# Now that application files (including artisan) are present, run scripts that require it
+RUN composer dump-autoload --optimize && \
+    if [ -f artisan ]; then php artisan package:discover --ansi || true; fi
 
 # Final stage: runtime image
 FROM php:8.2-cli
