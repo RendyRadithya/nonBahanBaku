@@ -21,6 +21,13 @@ Route::get('/dashboard', function () {
         // Data for Manager Stock Dashboard
         $ordersQuery = Order::query();
 
+        // By default, show only ongoing orders on the manager dashboard
+        // (menunggu konfirmasi, dikonfirmasi, sedang diproses, dikirim).
+        // If a specific status filter is provided via query string, allow it to override.
+        if (!$status) {
+            $ordersQuery->whereIn('status', ['pending', 'confirmed', 'in_progress', 'shipped']);
+        }
+
         if ($q) {
             $ordersQuery->where(function($sub) use ($q) {
                 $sub->where('order_number', 'like', "%{$q}%")
@@ -53,6 +60,12 @@ Route::get('/dashboard', function () {
     if ($user->role === 'vendor') {
         // Data for Vendor Dashboard
         $ordersQuery = Order::where('vendor_id', $user->id);
+
+        // By default, show only ongoing orders on the vendor dashboard
+        // (menunggu konfirmasi, dikonfirmasi, sedang diproses, dikirim).
+        if (!$status) {
+            $ordersQuery->whereIn('status', ['pending', 'confirmed', 'in_progress', 'shipped']);
+        }
 
         if ($q) {
             $ordersQuery->where(function($sub) use ($q) {
@@ -109,6 +122,12 @@ Route::get('/riwayat-pesanan', function () {
     
     // Build query
     $ordersQuery = Order::query();
+
+    // By default, the order history page should only contain completed and rejected orders.
+    // Allow the query param `status` to override when specified.
+    if (!$status) {
+        $ordersQuery->whereIn('status', ['completed', 'rejected']);
+    }
     
     // Search filter
     if ($q) {
@@ -143,11 +162,13 @@ Route::get('/riwayat-pesanan', function () {
     // Get unique vendors for filter dropdown
     $vendors = Order::select('vendor_name')->distinct()->orderBy('vendor_name')->pluck('vendor_name');
     
-    // Statistics
+    // Statistics: total for manager riwayat should be completed + rejected
+    $completedCount = Order::where('status', 'completed')->count();
+    $rejectedCount = Order::where('status', 'rejected')->count();
     $stats = [
-        'total' => Order::count(),
-        'completed' => Order::where('status', 'completed')->count(),
-        'rejected' => Order::where('status', 'rejected')->count(),
+        'total' => $completedCount + $rejectedCount,
+        'completed' => $completedCount,
+        'rejected' => $rejectedCount,
         'total_spent' => Order::whereIn('status', ['completed', 'shipped'])->sum('total_price'),
     ];
     
@@ -407,6 +428,50 @@ Route::get('/laporan', function () {
     ));
 })->middleware(['auth', 'verified'])->name('reports');
 
+// Export Reports (manager) - export by year/month filters
+Route::get('/laporan/export', function () {
+    $user = Auth::user();
+    if ($user->role !== 'manager_stock') { abort(403); }
+
+    $year = request('year', date('Y'));
+    $month = request('month');
+
+    $ordersQuery = Order::query();
+    $ordersQuery->when($year, fn($q) => $q->whereYear('created_at', $year));
+    if ($month) { $ordersQuery->whereMonth('created_at', $month); }
+
+    $orders = $ordersQuery->latest()->get();
+
+    $statusLabels = [
+        'pending' => 'Menunggu', 'confirmed' => 'Dikonfirmasi', 'rejected' => 'Ditolak',
+        'in_progress' => 'Diproses', 'shipped' => 'Dikirim', 'completed' => 'Selesai'
+    ];
+
+    $filename = 'laporan-' . ($year ?: date('Y')) . ($month ? '-'.str_pad($month,2,'0',STR_PAD_LEFT) : '') . '-' . date('YmdHis') . '.csv';
+    $headers = [ 'Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => 'attachment; filename="' . $filename . '"' ];
+
+    $callback = function() use ($orders, $statusLabels) {
+        $file = fopen('php://output', 'w');
+        fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+        fputcsv($file, ['No. Pesanan','Tanggal','Vendor','Produk','Jumlah','Total Harga','Status','Est. Pengiriman'], ';');
+        foreach($orders as $order) {
+            fputcsv($file, [
+                $order->order_number,
+                $order->created_at->format('d/m/Y'),
+                $order->vendor_name,
+                $order->product_name,
+                $order->quantity,
+                $order->total_price,
+                $statusLabels[$order->status] ?? $order->status,
+                $order->estimated_delivery ? \Carbon\Carbon::parse($order->estimated_delivery)->format('d/m/Y') : '-'
+            ], ';');
+        }
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+})->middleware(['auth','verified'])->name('reports.export');
+
 // Vendor Reports & Analytics
 Route::get('/vendor/laporan', function () {
     $user = Auth::user();
@@ -505,6 +570,48 @@ Route::get('/vendor/laporan', function () {
     ));
 })->middleware(['auth', 'verified'])->name('vendor.reports');
 
+// Export Reports (vendor) - export by year/month filters
+Route::get('/vendor/laporan/export', function () {
+    $user = Auth::user();
+    if ($user->role !== 'vendor') { abort(403); }
+
+    $year = request('year', date('Y'));
+    $month = request('month');
+
+    $ordersQuery = Order::where('vendor_id', $user->id)->when($year, fn($q) => $q->whereYear('created_at', $year));
+    if ($month) { $ordersQuery->whereMonth('created_at', $month); }
+
+    $orders = $ordersQuery->latest()->get();
+
+    $statusLabels = [
+        'pending' => 'Menunggu', 'confirmed' => 'Dikonfirmasi', 'rejected' => 'Ditolak',
+        'in_progress' => 'Diproses', 'shipped' => 'Dikirim', 'completed' => 'Selesai'
+    ];
+
+    $filename = 'laporan-penjualan-' . ($year ?: date('Y')) . ($month ? '-'.str_pad($month,2,'0',STR_PAD_LEFT) : '') . '-' . date('YmdHis') . '.csv';
+    $headers = [ 'Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => 'attachment; filename="' . $filename . '"' ];
+
+    $callback = function() use ($orders, $statusLabels) {
+        $file = fopen('php://output', 'w');
+        fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+        fputcsv($file, ['No. Pesanan','Tanggal','Toko','Produk','Jumlah','Total Harga','Status'], ';');
+        foreach($orders as $order) {
+            fputcsv($file, [
+                $order->order_number,
+                $order->created_at->format('d/m/Y'),
+                $order->user->store_name ?? $order->user->name ?? '-',
+                $order->product_name,
+                $order->quantity,
+                $order->total_price,
+                $statusLabels[$order->status] ?? $order->status,
+            ], ';');
+        }
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+})->middleware(['auth','verified'])->name('vendor.reports.export');
+
 // Vendor Order History
 Route::get('/vendor/riwayat', function () {
     $user = Auth::user();
@@ -521,6 +628,11 @@ Route::get('/vendor/riwayat', function () {
     
     // Build query (only this vendor's orders)
     $ordersQuery = Order::where('vendor_id', $user->id);
+
+    // By default, vendor riwayat should only show completed and rejected orders
+    if (! $status) {
+        $ordersQuery->whereIn('status', ['completed', 'rejected']);
+    }
     
     // Search filter
     if ($q) {
@@ -546,11 +658,13 @@ Route::get('/vendor/riwayat', function () {
     // Paginate results
     $orders = $ordersQuery->with('user:id,name,store_name')->latest()->paginate(15)->withQueryString();
     
-    // Statistics
+    // Statistics: total for riwayat should be completed + rejected
+    $completedCount = Order::where('vendor_id', $user->id)->where('status', 'completed')->count();
+    $rejectedCount = Order::where('vendor_id', $user->id)->where('status', 'rejected')->count();
     $stats = [
-        'total' => Order::where('vendor_id', $user->id)->count(),
-        'completed' => Order::where('vendor_id', $user->id)->where('status', 'completed')->count(),
-        'rejected' => Order::where('vendor_id', $user->id)->where('status', 'rejected')->count(),
+        'total' => $completedCount + $rejectedCount,
+        'completed' => $completedCount,
+        'rejected' => $rejectedCount,
         'total_revenue' => Order::where('vendor_id', $user->id)->whereIn('status', ['completed', 'shipped', 'confirmed'])->sum('total_price'),
     ];
     
